@@ -1,0 +1,1768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GC of The Future - Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      transition: background-color 0.3s, color 0.3s;
+    }
+    .font-brutal {
+      font-family: 'Archivo Black', 'Impact', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .hard-shadow {
+      box-shadow: 4px 4px 0px 0px #000000;
+    }
+    .dark .hard-shadow {
+      box-shadow: 4px 4px 0px 0px #ffffff;
+    }
+    .hard-shadow-hover:hover {
+      transform: translate(-2px, -2px);
+      box-shadow: 6px 6px 0px 0px #000000;
+    }
+    .dark .hard-shadow-hover:hover {
+      box-shadow: 6px 6px 0px 0px #ffffff;
+    }
+    .brutal-border {
+      border: 3px solid #000000;
+    }
+    .dark .brutal-border {
+      border: 3px solid #ffffff;
+    }
+    .brutal-border-thin {
+      border: 2px solid #000000;
+    }
+    .dark .brutal-border-thin {
+      border: 2px solid #ffffff;
+    }
+    .brutal-border-2 {
+      border: 2px solid #000000;
+    }
+    .dark .brutal-border-2 {
+      border: 2px solid #ffffff;
+    }
+    .brutal-border-b-4 {
+      border-bottom: 4px solid #000000;
+    }
+    .dark .brutal-border-b-4 {
+      border-bottom: 4px solid #ffffff;
+    }
+    .brutal-border-l-4 {
+      border-left: 4px solid #000000;
+    }
+    .dark .brutal-border-l-4 {
+      border-left: 4px solid #ffffff;
+    }
+    .thick-rule {
+      border-bottom: 4px solid #000000;
+    }
+    .dark .thick-rule {
+      border-bottom: 4px solid #ffffff;
+    }
+    @media (max-width: 768px) {
+      .mobile-full {
+        width: 100% !important;
+      }
+      .mobile-stack {
+        flex-direction: column;
+      }
+      .mobile-text-sm {
+        font-size: 0.875rem;
+      }
+    }
+    .tooltip {
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      margin-bottom: 8px;
+      padding: 6px 12px;
+      background: #1f2937;
+      color: white;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+      border-radius: 6px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s;
+      z-index: 1000;
+    }
+    .dark .tooltip {
+      background: #f9fafb;
+      color: #1f2937;
+    }
+    .tooltip-visible {
+      opacity: 1;
+    }
+    .tooltip::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 6px solid transparent;
+      border-top-color: #1f2937;
+    }
+    .dark .tooltip::after {
+      border-top-color: #f9fafb;
+    }
+  </style>
+</head>
+<body class="bg-white">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // Data
+    const contracts = [
+      {
+        id: "CT-2024-004",
+        name: "DPA - European Customer",
+        status: "In Review",
+        slaDaysRemaining: 2,
+        slaTarget: 5,
+        slaProgress: 70,
+        value: 450000,
+        valueLabel: "Enterprise",
+        riskScore: 43,
+        riskDetails: {
+          level: "Medium",
+          factors: ["Data privacy compliance concerns", "GDPR requirements", "Cross-border data transfer"],
+          mitigation: [
+            "Review data processing addendum clauses",
+            "Verify GDPR compliance language",
+            "Consult with EU legal counsel",
+            "Update data transfer mechanisms"
+          ]
+        },
+        playbook: {
+          relevant: true,
+          updatesNeeded: [
+            "GDPR clause template needs update for 2024 regulations",
+            "Data transfer mechanism section outdated",
+            "Add new standard language for EU customers"
+          ]
+        },
+        timeline: {
+          steps: [
+            { label: "Draft Created", completed: true, days: null, reviewer: "Sarah Chen", role: "Legal Operations" },
+            { label: "Initial Review", completed: true, days: 2, reviewer: "Michael Park", role: "Associate Counsel" },
+            { label: "Counterparty Review", completed: false, days: 3, inProgress: true, reviewer: "External", role: "Customer Legal" },
+          ]
+        },
+        playbook: {
+          relevant: true,
+          applicablePlaybooks: ["DPA Playbook", "EU Data Privacy Playbook", "GDPR Compliance Guide"],
+          updatesNeeded: [
+            "GDPR clause template needs update for 2024 regulations",
+            "Data transfer mechanism section outdated",
+            "Add new standard language for EU customers"
+          ]
+        },
+        integrations: ["Ironclad", "Salesforce", "Slack", "MS Word", "Jira", "Gmail"],
+        notes: "We need to get product involved..."
+      },
+      {
+        id: "CT-2024-001",
+        name: "Enterprise MSA - Acme Corp",
+        status: "In Review",
+        slaDaysRemaining: 3,
+        slaTarget: 5,
+        slaProgress: 60,
+        value: 850000,
+        valueLabel: "Enterprise",
+        riskScore: 65,
+        riskDetails: {
+          level: "High",
+          factors: ["High contract value", "Unfavorable liability terms", "IP ownership concerns"],
+          mitigation: [
+            "Negotiate liability cap",
+            "Clarify IP ownership terms",
+            "Add termination clauses",
+            "Review indemnification language"
+          ]
+        },
+        timeline: {
+          steps: [
+            { label: "Draft Created", completed: true, days: null, reviewer: "Sarah Chen", role: "Legal Operations" },
+            { label: "Initial Review", completed: true, days: 3, reviewer: "Michael Park", role: "Associate Counsel" },
+            { label: "Counterparty Review", completed: false, days: 4, inProgress: true, reviewer: "External", role: "Acme Corp Legal" },
+          ]
+        },
+        integrations: ["Ironclad", "Salesforce", "Jira", "MS Word", "Slack", "Gmail"],
+        playbook: {
+          relevant: true,
+          applicablePlaybooks: ["Enterprise MSA Playbook", "Liability Terms Guide", "IP Ownership Standards"],
+          updatesNeeded: [
+            "Liability cap language needs standardization",
+            "IP ownership clause template outdated"
+          ]
+        },
+        notes: ""
+      },
+      {
+        id: "CT-2024-002",
+        name: "NDA - TechStart Inc",
+        status: "Approved",
+        slaDaysRemaining: 8,
+        slaTarget: 7,
+        slaProgress: 100,
+        value: 35000,
+        valueLabel: "SMB",
+        riskScore: 15,
+        riskDetails: {
+          level: "Low",
+          factors: ["Standard NDA terms", "Low value contract"],
+          mitigation: ["Monitor expiration date", "Archive after execution"]
+        },
+        playbook: {
+          relevant: false,
+          updatesNeeded: []
+        },
+        timeline: {
+          steps: [
+            { label: "Draft Created", completed: true, days: null, reviewer: "Sarah Chen", role: "Legal Operations" },
+            { label: "Initial Review", completed: true, days: 1, reviewer: "Jennifer Lee", role: "Senior Counsel" },
+            { label: "Counterparty Review", completed: true, days: 1, reviewer: "External", role: "TechStart Legal" },
+          ]
+        },
+        integrations: ["Ironclad", "Salesforce", "Jira"],
+        notes: ""
+      },
+      {
+        id: "CT-2024-003",
+        name: "SOW - Global Services Agreement",
+        status: "Draft",
+        slaDaysRemaining: 12,
+        slaTarget: 10,
+        slaProgress: 20,
+        value: 1200000,
+        valueLabel: "Enterprise",
+        riskScore: 78,
+        riskDetails: {
+          level: "High",
+          factors: ["Very high contract value", "Complex service terms", "Payment terms risk", "Scope definition unclear"],
+          mitigation: [
+            "Define clear service scope",
+            "Negotiate payment milestones",
+            "Add performance metrics",
+            "Include termination rights",
+            "Review force majeure clauses"
+          ]
+        },
+        playbook: {
+          relevant: true,
+          applicablePlaybooks: ["SOW Playbook", "Service Agreement Guide", "Payment Terms Standards"],
+          updatesNeeded: [
+            "Service scope definition template needs clarity",
+            "Payment milestone language should be standardized",
+            "Add new termination clause examples"
+          ]
+        },
+        timeline: {
+          steps: [
+            { label: "Draft Created", completed: true, days: null, reviewer: "Sarah Chen", role: "Legal Operations" },
+            { label: "Initial Review", completed: true, days: 3, reviewer: "David Kim", role: "Associate Counsel" },
+            { label: "Counterparty Review", completed: false, days: 5, inProgress: true, reviewer: "External", role: "Customer Legal" },
+          ]
+        },
+        integrations: ["Ironclad", "Salesforce", "Jira", "MS Word", "Slack"],
+        notes: ""
+      },
+      {
+        id: "CT-2024-005",
+        name: "Amendment - Renewal Terms",
+        status: "Executed",
+        slaDaysRemaining: 15,
+        slaTarget: 7,
+        slaProgress: 100,
+        value: 650000,
+        valueLabel: "Enterprise",
+        riskScore: 28,
+        riskDetails: {
+          level: "Low",
+          factors: ["Renewal of existing contract", "Minimal changes"],
+          mitigation: ["Track renewal date", "Review pricing terms"]
+        },
+        playbook: {
+          relevant: false,
+          updatesNeeded: []
+        },
+        timeline: {
+          steps: [
+            { label: "Draft Created", completed: true, days: null, reviewer: "Sarah Chen", role: "Legal Operations" },
+            { label: "Initial Review", completed: true, days: 1, reviewer: "Michael Park", role: "Associate Counsel" },
+            { label: "Counterparty Review", completed: true, days: 5, reviewer: "External", role: "Customer Legal" },
+          ]
+        },
+        integrations: ["Ironclad", "Salesforce", "Jira"],
+        notes: ""
+      },
+      {
+        id: "CT-2024-006",
+        name: "MSA - APAC Expansion",
+        status: "On Hold",
+        slaDaysRemaining: 1,
+        slaTarget: 5,
+        slaProgress: 20,
+        value: 1800000,
+        valueLabel: "Enterprise",
+        riskScore: 82,
+        riskDetails: {
+          level: "Critical",
+          factors: ["Very high value", "Cross-jurisdictional complexity", "Regulatory compliance", "Currency risk"],
+          mitigation: [
+            "Engage APAC legal counsel",
+            "Review regulatory requirements",
+            "Address currency fluctuation clauses",
+            "Add dispute resolution mechanism",
+            "Verify tax implications"
+          ]
+        },
+        playbook: {
+          relevant: true,
+          applicablePlaybooks: ["APAC Expansion Playbook", "Cross-Border Agreements", "Currency Risk Guide"],
+          updatesNeeded: [
+            "APAC jurisdiction playbook section missing",
+            "Currency risk clause template needed",
+            "Cross-border dispute resolution language outdated"
+          ]
+        },
+        timeline: {
+          steps: [
+            { label: "Draft Created", completed: true, days: null, reviewer: "Sarah Chen", role: "Legal Operations" },
+            { label: "Initial Review", completed: true, days: 6, reviewer: "Emily Rodriguez", role: "Senior Counsel" },
+            { label: "Counterparty Review", completed: false, days: 1, inProgress: true, reviewer: "External", role: "APAC Legal Team" },
+          ]
+        },
+        integrations: ["Ironclad", "Salesforce", "Jira", "MS Word", "Slack", "Gmail"],
+        notes: ""
+      },
+      {
+        id: "CT-2024-007",
+        name: "NDA - Strategic Partner",
+        status: "In Review",
+        slaDaysRemaining: 4,
+        slaTarget: 5,
+        slaProgress: 80,
+        value: 0,
+        valueLabel: "N/A",
+        riskScore: 35,
+        riskDetails: {
+          level: "Low",
+          factors: ["Standard NDA", "Partner agreement"],
+          mitigation: ["Review mutual NDA terms", "Verify exclusivity clauses"]
+        },
+        playbook: {
+          relevant: false,
+          updatesNeeded: []
+        },
+        timeline: {
+          steps: [
+            { label: "Draft Created", completed: true, days: null, reviewer: "Sarah Chen", role: "Legal Operations" },
+            { label: "Initial Review", completed: true, days: 1, reviewer: "Jennifer Lee", role: "Senior Counsel" },
+            { label: "Counterparty Review", completed: false, days: 3, inProgress: true, reviewer: "External", role: "Partner Legal" },
+          ]
+        },
+        integrations: ["Ironclad", "Salesforce", "Jira"],
+        notes: ""
+      },
+      {
+        id: "CT-2024-008",
+        name: "SOW - Q1 Implementation",
+        status: "Approved",
+        slaDaysRemaining: 6,
+        slaTarget: 7,
+        slaProgress: 100,
+        value: 280000,
+        valueLabel: "Mid-Market",
+        riskScore: 22,
+        riskDetails: {
+          level: "Low",
+          factors: ["Standard SOW terms", "Mid-market value"],
+          mitigation: ["Track implementation milestones", "Monitor deliverables"]
+        },
+        playbook: {
+          relevant: false,
+          updatesNeeded: []
+        },
+        timeline: {
+          steps: [
+            { label: "Draft Created", completed: true, days: null, reviewer: "Sarah Chen", role: "Legal Operations" },
+            { label: "Initial Review", completed: true, days: 1, reviewer: "Michael Park", role: "Associate Counsel" },
+            { label: "Counterparty Review", completed: true, days: 2, reviewer: "External", role: "Customer Legal" },
+          ]
+        },
+        integrations: ["Ironclad", "Salesforce", "Jira"],
+        notes: ""
+      },
+      {
+        id: "CT-2024-009",
+        name: "MSA - Mid-Market Client",
+        status: "In Review",
+        slaDaysRemaining: 2,
+        slaTarget: 5,
+        slaProgress: 60,
+        value: 150000,
+        valueLabel: "Mid-Market",
+        riskScore: 38,
+        riskDetails: {
+          level: "Low",
+          factors: ["Mid-market standard terms", "Moderate value"],
+          mitigation: ["Review standard clauses", "Verify pricing terms"]
+        },
+        playbook: {
+          relevant: false,
+          updatesNeeded: []
+        },
+        timeline: {
+          steps: [
+            { label: "Draft Created", completed: true, days: null, reviewer: "Sarah Chen", role: "Legal Operations" },
+            { label: "Initial Review", completed: true, days: 2, reviewer: "David Kim", role: "Associate Counsel" },
+            { label: "Counterparty Review", completed: false, days: 2, inProgress: true, reviewer: "External", role: "Customer Legal" },
+          ]
+        },
+        integrations: ["Ironclad", "Salesforce", "Jira", "MS Word"],
+        notes: ""
+      },
+      {
+        id: "CT-2024-010",
+        name: "DPA - UK Customer",
+        status: "Draft",
+        slaDaysRemaining: 9,
+        slaTarget: 10,
+        slaProgress: 10,
+        value: 750000,
+        valueLabel: "Enterprise",
+        riskScore: 72,
+        riskDetails: {
+          level: "High",
+          factors: ["UK GDPR compliance", "Post-Brexit regulations", "Data transfer requirements"],
+          mitigation: [
+            "Review UK GDPR compliance",
+            "Verify data transfer mechanisms",
+            "Update standard contractual clauses",
+            "Consult UK legal counsel"
+          ]
+        },
+        playbook: {
+          relevant: true,
+          applicablePlaybooks: ["UK GDPR Playbook", "Post-Brexit Data Transfer Guide", "UK Data Privacy Standards"],
+          updatesNeeded: [
+            "UK GDPR section needs post-Brexit update",
+            "Data transfer mechanism for UK outdated",
+            "Standard contractual clauses need revision"
+          ]
+        },
+        timeline: {
+          steps: [
+            { label: "Draft Created", completed: true, days: null, reviewer: "Sarah Chen", role: "Legal Operations" },
+            { label: "Initial Review", completed: true, days: 4, reviewer: "Emily Rodriguez", role: "Senior Counsel" },
+            { label: "Counterparty Review", completed: false, days: 5, inProgress: true, reviewer: "External", role: "UK Legal Team" },
+          ]
+        },
+        integrations: ["Ironclad", "Salesforce", "Jira", "MS Word", "Slack", "Gmail"],
+        notes: ""
+      },
+      {
+        id: "CT-2024-011",
+        name: "NDA - Vendor Agreement",
+        status: "Approved",
+        slaDaysRemaining: 11,
+        slaTarget: 7,
+        slaProgress: 100,
+        value: 0,
+        valueLabel: "N/A",
+        riskScore: 12,
+        riskDetails: {
+          level: "Low",
+          factors: ["Standard vendor NDA"],
+          mitigation: ["Archive after execution"]
+        },
+        playbook: {
+          relevant: false,
+          updatesNeeded: []
+        },
+        timeline: {
+          steps: [
+            { label: "Draft Created", completed: true, days: null, reviewer: "Sarah Chen", role: "Legal Operations" },
+            { label: "Initial Review", completed: true, days: 1, reviewer: "Jennifer Lee", role: "Senior Counsel" },
+            { label: "Counterparty Review", completed: true, days: 1, reviewer: "External", role: "TechStart Legal" },
+          ]
+        },
+        integrations: ["Ironclad", "Salesforce"],
+        notes: ""
+      },
+      {
+        id: "CT-2024-012",
+        name: "Amendment - Pricing Update",
+        status: "Executed",
+        slaDaysRemaining: 7,
+        slaTarget: 5,
+        slaProgress: 100,
+        value: 920000,
+        valueLabel: "Enterprise",
+        riskScore: 18,
+        riskDetails: {
+          level: "Low",
+          factors: ["Pricing amendment only", "Low risk change"],
+          mitigation: ["Track pricing changes", "Update contract records"]
+        },
+        playbook: {
+          relevant: false,
+          updatesNeeded: []
+        },
+        timeline: {
+          steps: [
+            { label: "Draft Created", completed: true, days: null, reviewer: "Sarah Chen", role: "Legal Operations" },
+            { label: "Initial Review", completed: true, days: 1, reviewer: "Jennifer Lee", role: "Senior Counsel" },
+            { label: "Counterparty Review", completed: true, days: 1, reviewer: "External", role: "TechStart Legal" },
+          ]
+        },
+        integrations: ["Ironclad", "Salesforce", "Jira"],
+        notes: ""
+      },
+    ];
+
+    const kpiData = {
+      activeContracts: { value: 12, change: "+2 this month", changeType: "positive" },
+      atSlaRisk: { value: 3, change: "Action required", changeType: "negative" },
+      pendingMarkups: { value: 7, change: "Avg. 1.2 days old", changeType: "neutral" },
+      avgDeviation: { value: "12%", change: "-3% from Q3", changeType: "positive" },
+    };
+
+    const orgMetrics = {
+      avgTimeToContract: 8.5,
+      totalARR: 12500000,
+      totalContractsReviewed: 342,
+      contractsThisMonth: 28,
+      avgDeviationFromPlaybook: 12,
+      contractsAtRisk: 3
+    };
+
+    const heatmapData = {
+      rows: ["Global Sales", "Engineering", "Marketing", "HR"],
+      cols: ["Liability", "IP Rights", "Termination", "Data Privacy"],
+      cells: {
+        "Global Sales-Liability": { 
+          value: 88, risk: "high", 
+          details: "High liability exposure in sales contracts. Review indemnification clauses and liability caps.",
+          internalProcess: "Sales team typically uses standard MSA template, but enterprise customers frequently request unlimited liability caps. Our workflow involves legal review within 24 hours, then escalation to GC for high-value deals.",
+          communication: "Primary communication via Slack #legal-sales channel. Weekly sync meetings on Fridays. High-priority deals use @here mentions.",
+          painPoints: ["Unlimited liability requests (85% of enterprise deals)", "Indemnification scope disputes", "Consequential damages exclusions"],
+          strengths: ["Quick turnaround on standard terms", "Strong template library", "Good relationship with sales leadership"]
+        },
+        "Global Sales-IP Rights": { 
+          value: 45, risk: "medium", 
+          details: "Moderate IP concerns. Ensure proper IP ownership language in sales agreements.",
+          internalProcess: "Standard IP assignment clause in playbook. Sales ops team handles initial review, flags any IP-related redlines to legal.",
+          communication: "Email threads for complex IP issues. Slack for quick questions.",
+          painPoints: ["Customer requests for joint IP ownership", "Background IP carve-outs"],
+          strengths: ["Clear IP ownership language", "Consistent application across deals"]
+        },
+        "Global Sales-Termination": { 
+          value: 12, risk: "low", 
+          details: "Low termination risk. Standard termination clauses are acceptable.",
+          internalProcess: "Standard 30-day termination for convenience clause. Rarely negotiated.",
+          communication: "Minimal - standard clause accepted in 95% of deals.",
+          painPoints: ["Occasional requests for longer notice periods"],
+          strengths: ["Well-established termination language", "Rarely contested", "Quick approvals"]
+        },
+        "Global Sales-Data Privacy": { 
+          value: 92, risk: "high", 
+          details: "Critical data privacy exposure. Urgent review of GDPR and data processing terms required.",
+          internalProcess: "All EU deals require DPA. Legal team reviews within 48 hours. GDPR compliance checklist mandatory.",
+          communication: "Dedicated #gdpr-compliance Slack channel. Weekly data privacy office hours.",
+          painPoints: ["GDPR compliance verification delays", "Cross-border data transfer mechanisms", "Data retention period negotiations"],
+          strengths: ["Strong GDPR expertise", "Comprehensive DPA template", "Regular training updates"]
+        },
+        "Engineering-Liability": { 
+          value: 42, risk: "medium", 
+          details: "Moderate liability exposure. Review service level agreements and warranties.",
+          internalProcess: "Engineering contracts reviewed by product counsel. SLA terms negotiated based on service tier.",
+          communication: "Jira tickets for tracking. Slack #product-legal channel.",
+          painPoints: ["Warranty period negotiations", "Service credit calculations"],
+          strengths: ["Clear SLA framework", "Tiered service model"]
+        },
+        "Engineering-IP Rights": { 
+          value: 18, risk: "low", 
+          details: "Low IP risk. Standard IP assignment clauses in place.",
+          internalProcess: "Standard work-for-hire language. Rarely an issue.",
+          communication: "Minimal communication needed.",
+          painPoints: [],
+          strengths: ["Clear IP assignment", "No disputes in past 2 years"]
+        },
+        "Engineering-Termination": { 
+          value: 85, risk: "high", 
+          details: "High termination risk. Review termination for cause provisions and notice periods.",
+          internalProcess: "Engineering contracts often have complex termination clauses. Requires product and legal alignment.",
+          communication: "Weekly product-legal sync. Complex terminations escalate to GC.",
+          painPoints: ["Termination for convenience timing", "Data migration obligations", "Survival clause negotiations"],
+          strengths: ["Strong product-legal partnership", "Clear escalation path"]
+        },
+        "Engineering-Data Privacy": { 
+          value: 91, risk: "high", 
+          details: "Critical data privacy risk. Review data handling procedures and compliance requirements.",
+          internalProcess: "All engineering contracts require data processing review. Security team involved in high-risk deals.",
+          communication: "Tri-weekly security-legal sync. Dedicated Slack channel.",
+          painPoints: ["Data localization requirements", "Security audit obligations", "Breach notification timelines"],
+          strengths: ["Strong security-legal partnership", "Comprehensive data handling procedures"]
+        },
+        "Marketing-Liability": { 
+          value: 8, risk: "low", 
+          details: "Low liability exposure. Standard marketing agreement terms.",
+          internalProcess: "Standard marketing agreements. Legal review typically under 2 hours.",
+          communication: "Email for agreements. Slack for quick approvals.",
+          painPoints: [],
+          strengths: ["Streamlined process", "Quick turnaround", "Low risk profile"]
+        },
+        "Marketing-IP Rights": { 
+          value: 78, risk: "high", 
+          details: "High IP risk in marketing materials. Review content ownership and usage rights.",
+          internalProcess: "Marketing agreements require IP ownership review. Creative team coordinates with legal.",
+          communication: "Weekly creative-legal sync. Dedicated Slack channel for IP questions.",
+          painPoints: ["Content usage rights", "Moral rights waivers", "Derivative work definitions"],
+          strengths: ["Clear content ownership framework", "Good creative-legal relationship"]
+        },
+        "Marketing-Termination": { 
+          value: 35, risk: "medium", 
+          details: "Moderate termination risk. Review campaign-specific termination clauses.",
+          internalProcess: "Campaign agreements have flexible termination. Legal reviews campaign-specific terms.",
+          communication: "Email threads per campaign. Slack for urgent approvals.",
+          painPoints: ["Campaign-specific notice periods", "Content removal obligations"],
+          strengths: ["Flexible framework", "Quick approvals"]
+        },
+        "Marketing-Data Privacy": { 
+          value: 15, risk: "low", 
+          details: "Low data privacy risk. Standard consent mechanisms in place.",
+          internalProcess: "Standard consent language. Rarely negotiated.",
+          communication: "Minimal - standard process.",
+          painPoints: [],
+          strengths: ["Clear consent framework", "Compliance with regulations"]
+        },
+        "HR-Liability": { 
+          value: 25, risk: "low", 
+          details: "Low liability exposure. Standard employment agreement terms.",
+          internalProcess: "Standard employment agreements. HR handles most reviews.",
+          communication: "HR-legal monthly sync. Email for specific questions.",
+          painPoints: [],
+          strengths: ["Well-established templates", "Low risk"]
+        },
+        "HR-IP Rights": { 
+          value: 30, risk: "low", 
+          details: "Low IP risk. Standard employee IP assignment clauses.",
+          internalProcess: "Standard IP assignment in all employment agreements.",
+          communication: "Minimal - standard clause.",
+          painPoints: [],
+          strengths: ["Clear IP assignment", "No disputes"]
+        },
+        "HR-Termination": { 
+          value: 20, risk: "low", 
+          details: "Low termination risk. Standard employment termination provisions.",
+          internalProcess: "Standard at-will employment. Legal reviews executive agreements.",
+          communication: "Email for executive agreements.",
+          painPoints: [],
+          strengths: ["Clear termination framework"]
+        },
+        "HR-Data Privacy": { 
+          value: 18, risk: "low", 
+          details: "Low data privacy risk. Employee data handled per policy.",
+          internalProcess: "Employee data handled per HR policy. Legal reviews only for special cases.",
+          communication: "Quarterly HR-legal sync.",
+          painPoints: [],
+          strengths: ["Strong HR policies", "Compliance maintained"]
+        },
+      },
+    };
+
+    // Components
+    const TopNav = ({ isDark, onToggleDark }) => {
+      return (
+        <nav className={`brutal-border ${isDark ? 'bg-gray-900 text-white' : 'bg-white'} px-6 py-4 relative transition-colors`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="font-brutal text-2xl">GC OF THE FUTURE</div>
+            </div>
+            <div className="flex items-center space-x-3">
+              <input
+                type="text"
+                placeholder="SEARCH..."
+                className={`brutal-border-thin px-4 py-2 rounded-lg hard-shadow focus:outline-none focus:ring-2 ${isDark ? 'bg-gray-800 text-white border-white focus:ring-yellow-400' : 'bg-white focus:ring-yellow-300'}`}
+              />
+              <button
+                onClick={onToggleDark}
+                className={`brutal-border-thin ${isDark ? 'bg-yellow-100 text-black' : 'bg-gray-900 text-white'} p-2 rounded-lg hard-shadow-hover transition-all`}
+                title={isDark ? "Light Mode" : "Dark Mode"}
+              >
+                {isDark ? '☀️' : '🌙'}
+              </button>
+              <button className={`brutal-border-thin ${isDark ? 'bg-white text-black' : 'bg-black text-white'} px-6 py-2 rounded-full font-bold hard-shadow-hover transition-all`}>
+                EXPORT
+              </button>
+            </div>
+          </div>
+          <div className={`absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-16 h-16 ${isDark ? 'bg-yellow-200' : 'bg-yellow-100'} brutal-border rounded-full hard-shadow flex items-center justify-center`}>
+            <span className="font-brutal text-xl">GC</span>
+          </div>
+        </nav>
+      );
+    };
+
+    const KPICard = ({ label, value, change, changeType, bgColor, isDark }) => {
+      const changeColors = {
+        positive: 'text-green-600',
+        negative: 'text-red-600',
+        neutral: isDark ? 'text-gray-400' : 'text-gray-600',
+      };
+
+      return (
+        <div className={`brutal-border rounded-2xl p-6 hard-shadow hard-shadow-hover transition-all ${bgColor || (isDark ? 'bg-gray-800' : 'bg-white')}`}>
+          <div className={`text-xs font-bold ${isDark ? 'text-gray-400' : 'text-gray-600'} mb-2`}>{label}</div>
+          <div className={`text-5xl font-black mb-2 ${isDark ? 'text-white' : 'text-black'}`}>{value}</div>
+          <div className={`text-sm font-bold ${changeColors[changeType] || (isDark ? 'text-gray-400' : 'text-gray-600')}`}>
+            {change}
+          </div>
+        </div>
+      );
+    };
+
+    const KPIGrid = ({ isDark }) => {
+      return (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <KPICard
+            label="ACTIVE CONTRACTS"
+            value={kpiData.activeContracts.value}
+            change={kpiData.activeContracts.change}
+            changeType={kpiData.activeContracts.changeType}
+            bgColor="bg-yellow-100"
+            isDark={isDark}
+          />
+          <KPICard
+            label="AT SLA RISK"
+            value={kpiData.atSlaRisk.value}
+            change={kpiData.atSlaRisk.change}
+            changeType={kpiData.atSlaRisk.changeType}
+            bgColor="bg-red-200"
+            isDark={isDark}
+          />
+          <KPICard
+            label="PENDING MARKUPS"
+            value={kpiData.pendingMarkups.value}
+            change={kpiData.pendingMarkups.change}
+            changeType={kpiData.pendingMarkups.changeType}
+            bgColor={isDark ? "bg-gray-800" : "bg-white"}
+            isDark={isDark}
+          />
+          <KPICard
+            label="AVG. DEVIATION"
+            value={kpiData.avgDeviation.value}
+            change={kpiData.avgDeviation.change}
+            changeType={kpiData.avgDeviation.changeType}
+            bgColor="bg-green-100"
+            isDark={isDark}
+          />
+        </div>
+      );
+    };
+
+    const HeatmapCell = ({ value, risk, onClick, isDark }) => {
+      const bgColors = {
+        high: isDark ? 'bg-red-900' : 'bg-red-200',
+        medium: isDark ? 'bg-yellow-800' : 'bg-yellow-100',
+        low: isDark ? 'bg-green-900' : 'bg-green-100',
+      };
+
+      return (
+        <td 
+          className={`${bgColors[risk] || (isDark ? 'bg-gray-800' : 'bg-gray-200')} brutal-border-thin text-center font-black py-4 px-4 cursor-pointer hard-shadow-hover transition-all`}
+          onClick={onClick}
+        >
+          <span className={`text-lg ${isDark ? 'text-white' : 'text-black'}`}>{value}%</span>
+        </td>
+      );
+    };
+
+    const OrgMetrics = ({ isDark }) => {
+      return (
+        <div className={`${isDark ? 'bg-gray-800' : 'bg-purple-50'} brutal-border rounded-2xl p-6 hard-shadow mb-8 transition-colors`}>
+          <h2 className={`font-brutal text-2xl mb-6 thick-rule pb-4 ${isDark ? 'text-white' : ''}`}>ORG HEALTH METRICS</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className={`${isDark ? 'bg-gray-900' : 'bg-white'} brutal-border rounded-xl p-4 transition-colors`}>
+              <div className={`text-xs font-bold mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>AVG TIME TO CONTRACT</div>
+              <div className={`text-3xl font-black ${isDark ? 'text-white' : 'text-black'}`}>{orgMetrics.avgTimeToContract} days</div>
+            </div>
+            <div className={`${isDark ? 'bg-gray-900' : 'bg-white'} brutal-border rounded-xl p-4 transition-colors`}>
+              <div className={`text-xs font-bold mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>TOTAL ARR DELIVERED</div>
+              <div className={`text-3xl font-black ${isDark ? 'text-white' : 'text-black'}`}>${(orgMetrics.totalARR / 1000000).toFixed(1)}M</div>
+            </div>
+            <div className={`${isDark ? 'bg-gray-900' : 'bg-white'} brutal-border rounded-xl p-4 transition-colors`}>
+              <div className={`text-xs font-bold mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>CONTRACTS REVIEWED</div>
+              <div className={`text-3xl font-black ${isDark ? 'text-white' : 'text-black'}`}>{orgMetrics.totalContractsReviewed}</div>
+            </div>
+            <div className={`${isDark ? 'bg-gray-900' : 'bg-white'} brutal-border rounded-xl p-4 transition-colors`}>
+              <div className={`text-xs font-bold mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>THIS MONTH</div>
+              <div className={`text-3xl font-black ${isDark ? 'text-white' : 'text-black'}`}>{orgMetrics.contractsThisMonth}</div>
+            </div>
+            <div className={`${isDark ? 'bg-gray-900' : 'bg-white'} brutal-border rounded-xl p-4 transition-colors`}>
+              <div className={`text-xs font-bold mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>AVG DEVIATION</div>
+              <div className={`text-3xl font-black ${isDark ? 'text-white' : 'text-black'}`}>{orgMetrics.avgDeviationFromPlaybook}%</div>
+            </div>
+            <div className={`${isDark ? 'bg-gray-900' : 'bg-white'} brutal-border rounded-xl p-4 transition-colors`}>
+              <div className={`text-xs font-bold mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>AT RISK</div>
+              <div className="text-3xl font-black text-red-600">{orgMetrics.contractsAtRisk}</div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    const ExposureHeatmap = ({ onCellClick, isDark }) => {
+      return (
+        <section className="mb-8">
+          <div className={`${isDark ? 'bg-gray-800' : 'bg-blue-50'} brutal-border rounded-2xl p-6 hard-shadow`}>
+            <h2 className="font-brutal text-2xl mb-4 thick-rule pb-4">EXPOSURE ANALYSIS</h2>
+            <div className={`${isDark ? 'bg-gray-900' : 'bg-white'} brutal-border rounded-xl overflow-hidden`}>
+              <table className="w-full">
+                <thead>
+                  <tr className={isDark ? 'bg-gray-800' : 'bg-gray-100'}>
+                    <th className="brutal-border-thin px-4 py-3 text-left font-brutal text-sm"></th>
+                    {heatmapData.cols.map((col) => (
+                      <th
+                        key={col}
+                        className="brutal-border-thin px-4 py-3 text-center font-brutal text-sm"
+                      >
+                        {col}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {heatmapData.rows.map((row) => (
+                    <tr key={row}>
+                      <td className={`brutal-border-thin px-4 py-3 font-black ${isDark ? 'text-white bg-gray-800' : 'text-black bg-gray-50'}`}>
+                        {row}
+                      </td>
+                      {heatmapData.cols.map((col) => {
+                        const key = `${row}-${col}`;
+                        const cell = heatmapData.cells[key];
+                        return (
+                          <HeatmapCell
+                            key={key}
+                            value={cell.value}
+                            risk={cell.risk}
+                            onClick={() => onCellClick(key, cell)}
+                            isDark={isDark}
+                          />
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      );
+    };
+
+    const ExposureAnalysisModal = ({ isOpen, onClose, cellData, department, clause, isDark }) => {
+      if (!isOpen || !cellData) return null;
+
+      const handleOverlayClick = (e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      };
+
+      const handleClose = (e) => {
+        e.stopPropagation();
+        onClose();
+      };
+
+      return (
+        <>
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-50" onClick={handleOverlayClick} />
+          <div className="fixed inset-0 flex items-center justify-center z-50 p-2 md:p-4 overflow-y-auto pointer-events-none">
+            <div className={`${isDark ? 'bg-gray-800 text-white' : 'bg-white'} brutal-border rounded-2xl p-4 md:p-8 max-w-4xl w-full hard-shadow my-4 md:my-8 transition-colors pointer-events-auto max-h-[90vh] overflow-y-auto`} onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between mb-6 thick-rule pb-4">
+                <div>
+                  <div className="text-xs font-bold text-gray-500 mb-1">EXPOSURE ANALYSIS</div>
+                  <h2 className="font-brutal text-3xl">
+                    {department} - {clause}
+                  </h2>
+                </div>
+                <button
+                  onClick={handleClose}
+                  className={`brutal-border-thin ${isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-white'} p-2 rounded-lg hard-shadow-hover transition-all`}
+                >
+                  <svg className={`w-6 h-6 ${isDark ? 'text-white' : 'text-black'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <div className="space-y-6">
+                <div>
+                  <h3 className="font-brutal text-xl mb-3">EXPOSURE DETAILS</h3>
+                  <p className={`${isDark ? 'text-gray-300' : 'text-gray-700'} font-medium`}>{cellData.details}</p>
+                </div>
+
+                {cellData.internalProcess && (
+                  <div className={`${isDark ? 'bg-blue-900' : 'bg-blue-50'} brutal-border rounded-xl p-6`}>
+                    <h3 className="font-brutal text-xl mb-4">INTERNAL PROCESS & WORKFLOW</h3>
+                    <p className={`${isDark ? 'text-gray-200' : 'text-gray-700'} font-medium`}>{cellData.internalProcess}</p>
+                  </div>
+                )}
+
+                {cellData.communication && (
+                  <div className={`${isDark ? 'bg-green-900' : 'bg-green-50'} brutal-border rounded-xl p-6`}>
+                    <h3 className="font-brutal text-xl mb-4">COMMUNICATION CHANNELS</h3>
+                    <p className={`${isDark ? 'text-gray-200' : 'text-gray-700'} font-medium`}>{cellData.communication}</p>
+                  </div>
+                )}
+
+                {cellData.painPoints && cellData.painPoints.length > 0 && (
+                  <div className={`${isDark ? 'bg-red-800' : 'bg-red-100'} brutal-border rounded-xl p-6`}>
+                    <h3 className="font-brutal text-xl mb-4">PAIN POINTS & NEGOTIATION CHALLENGES</h3>
+                    <ul className="space-y-2">
+                      {cellData.painPoints.map((point, index) => (
+                        <li key={index} className="flex items-start">
+                          <span className="font-black mr-2">•</span>
+                          <span className={`font-medium ${isDark ? 'text-gray-200' : ''}`}>{point}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {cellData.strengths && cellData.strengths.length > 0 && (
+                  <div className={`${isDark ? 'bg-green-800' : 'bg-green-100'} brutal-border rounded-xl p-6`}>
+                    <h3 className="font-brutal text-xl mb-4">WHAT'S WORKING WELL</h3>
+                    <ul className="space-y-2">
+                      {cellData.strengths.map((strength, index) => (
+                        <li key={index} className="flex items-start">
+                          <span className="font-black mr-2">✓</span>
+                          <span className={`font-medium ${isDark ? 'text-gray-200' : ''}`}>{strength}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                <div className={`${isDark ? 'bg-yellow-900' : 'bg-yellow-50'} brutal-border rounded-xl p-6`}>
+                  <h3 className="font-brutal text-xl mb-4">NEXT STEPS</h3>
+                  <ul className="space-y-2">
+                    <li className="flex items-start">
+                      <span className="font-black mr-2">1.</span>
+                      <span>Review all contracts in this category for compliance</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="font-black mr-2">2.</span>
+                      <span>Update contract templates with standardized language</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="font-black mr-2">3.</span>
+                      <span>Schedule training session for {department} team</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="font-black mr-2">4.</span>
+                      <span>Create playbook for {clause} clause negotiations</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="flex space-x-3">
+                  <button className="brutal-border-thin bg-black text-white px-6 py-3 rounded-full font-black hard-shadow-hover transition-all flex-1">
+                    GENERATE ACTION PLAN
+                  </button>
+                  <button className={`brutal-border-thin ${isDark ? 'bg-blue-200 text-black' : 'bg-blue-100 text-black'} px-6 py-3 rounded-full font-black hard-shadow-hover transition-all flex-1`}>
+                    SCHEDULE REVIEW
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      );
+    };
+
+    const StatusPill = ({ status }) => {
+      const statusStyles = {
+        'In Review': 'bg-blue-200 text-black',
+        'Approved': 'bg-green-100 text-black',
+        'Draft': 'bg-gray-100 text-black',
+        'Executed': 'bg-purple-200 text-black',
+        'On Hold': 'bg-yellow-100 text-black',
+      };
+
+      return (
+        <span className={`px-3 py-1 rounded-full text-xs font-black brutal-border-thin ${statusStyles[status] || 'bg-gray-200 text-black'}`}>
+          {status.toUpperCase()}
+        </span>
+      );
+    };
+
+    const ProgressBar = ({ progress, daysRemaining }) => {
+      const colorClass = progress >= 70 ? 'bg-green-200' : progress >= 40 ? 'bg-yellow-100' : 'bg-red-200';
+      
+      return (
+        <div className="flex items-center space-x-3">
+          <div className="flex-1 h-4 bg-gray-200 brutal-border-thin rounded-full overflow-hidden">
+            <div
+              className={`h-full ${colorClass} transition-all`}
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          <span className="text-sm font-black text-black whitespace-nowrap">{daysRemaining}d</span>
+        </div>
+      );
+    };
+
+    const RiskCircle = ({ score, onClick }) => {
+      const colorClass = score >= 70 ? 'bg-red-200' : score >= 40 ? 'bg-yellow-100' : 'bg-green-100';
+      
+      return (
+        <div 
+          className={`w-12 h-12 rounded-full brutal-border-2 flex items-center justify-center font-black text-lg cursor-pointer hard-shadow-hover transition-all ${colorClass}`}
+          onClick={onClick}
+        >
+          {score}
+        </div>
+      );
+    };
+
+    const SendDropdown = ({ contract, onClose, isDark }) => {
+      const [isOpen, setIsOpen] = useState(false);
+      const [showTooltip, setShowTooltip] = useState(false);
+      const dropdownRef = useRef(null);
+
+      useEffect(() => {
+        const handleClickOutside = (event) => {
+          if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+            setIsOpen(false);
+          }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+      }, []);
+
+      const handleSend = (method) => {
+        console.log(`Sending contract ${contract.id} status via ${method}`);
+        setIsOpen(false);
+        onClose?.();
+      };
+
+      return (
+        <div className="relative" ref={dropdownRef}>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsOpen(!isOpen);
+            }}
+            onMouseEnter={() => setShowTooltip(true)}
+            onMouseLeave={() => setShowTooltip(false)}
+            className={`brutal-border-thin ${isDark ? 'bg-gray-800' : 'bg-white'} p-2 rounded-lg hard-shadow-hover transition-all`}
+          >
+            <svg className={`w-5 h-5 ${isDark ? 'text-white' : 'text-black'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+            {showTooltip && (
+              <div className="tooltip tooltip-visible">Send contract status</div>
+            )}
+          </button>
+          {isOpen && (
+            <div className={`absolute right-0 mt-2 ${isDark ? 'bg-gray-800' : 'bg-white'} brutal-border rounded-xl hard-shadow z-50 min-w-[220px]`}>
+              <button
+                onClick={() => handleSend('Slack')}
+                className={`w-full px-4 py-3 text-left ${isDark ? 'hover:bg-gray-700' : 'hover:bg-blue-50'} brutal-border-b-2 last:border-b-0 font-bold flex items-center space-x-3`}
+              >
+                <div className="w-8 h-8 bg-purple-200 brutal-border-thin rounded-lg flex items-center justify-center">
+                  <span className="text-sm font-black">S</span>
+                </div>
+                <span>Send via Slack</span>
+              </button>
+              <button
+                onClick={() => handleSend('Gmail')}
+                className={`w-full px-4 py-3 text-left ${isDark ? 'hover:bg-gray-700' : 'hover:bg-red-50'} brutal-border-b-2 last:border-b-0 font-bold flex items-center space-x-3`}
+              >
+                <div className="w-8 h-8 bg-red-200 brutal-border-thin rounded-lg flex items-center justify-center">
+                  <span className="text-sm font-black">G</span>
+                </div>
+                <span>Send via Gmail</span>
+              </button>
+              <button
+                onClick={() => handleSend('Jira')}
+                className={`w-full px-4 py-3 text-left ${isDark ? 'hover:bg-gray-700' : 'hover:bg-blue-50'} brutal-border-b-2 last:border-b-0 font-bold flex items-center space-x-3`}
+              >
+                <div className="w-8 h-8 bg-blue-200 brutal-border-thin rounded-lg flex items-center justify-center">
+                  <span className="text-sm font-black">J</span>
+                </div>
+                <span>Create Jira Ticket</span>
+              </button>
+            </div>
+          )}
+        </div>
+      );
+    };
+
+    const EditDropdown = ({ contract, onClose, isDark }) => {
+      const [isOpen, setIsOpen] = useState(false);
+      const [showTooltip, setShowTooltip] = useState(false);
+      const dropdownRef = useRef(null);
+
+      useEffect(() => {
+        const handleClickOutside = (event) => {
+          if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+            setIsOpen(false);
+          }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+      }, []);
+
+      const handleEdit = (method) => {
+        console.log(`Editing contract ${contract.id} in ${method}`);
+        setIsOpen(false);
+        onClose?.();
+      };
+
+      return (
+        <div className="relative" ref={dropdownRef}>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsOpen(!isOpen);
+            }}
+            onMouseEnter={() => setShowTooltip(true)}
+            onMouseLeave={() => setShowTooltip(false)}
+            className={`brutal-border-thin ${isDark ? 'bg-gray-800' : 'bg-white'} p-2 rounded-lg hard-shadow-hover transition-all`}
+          >
+            <svg className={`w-5 h-5 ${isDark ? 'text-white' : 'text-black'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            {showTooltip && (
+              <div className="tooltip tooltip-visible">Edit contract</div>
+            )}
+          </button>
+          {isOpen && (
+            <div className={`absolute right-0 mt-2 ${isDark ? 'bg-gray-800' : 'bg-white'} brutal-border rounded-xl hard-shadow z-50 min-w-[220px]`}>
+              <button
+                onClick={() => handleEdit('MS Word')}
+                className={`w-full px-4 py-3 text-left ${isDark ? 'hover:bg-gray-700' : 'hover:bg-blue-50'} brutal-border-b-2 last:border-b-0 font-bold flex items-center space-x-3`}
+              >
+                <div className="w-8 h-8 bg-blue-200 brutal-border-thin rounded-lg flex items-center justify-center">
+                  <span className="text-sm font-black">W</span>
+                </div>
+                <span>Edit in MS Word</span>
+              </button>
+              <button
+                onClick={() => handleEdit('Google Docs')}
+                className={`w-full px-4 py-3 text-left ${isDark ? 'hover:bg-gray-700' : 'hover:bg-blue-50'} brutal-border-b-2 last:border-b-0 font-bold flex items-center space-x-3`}
+              >
+                <div className="w-8 h-8 bg-blue-200 brutal-border-thin rounded-lg flex items-center justify-center">
+                  <span className="text-sm font-black">G</span>
+                </div>
+                <span>Edit in Google Docs</span>
+              </button>
+            </div>
+          )}
+        </div>
+      );
+    };
+
+    const RiskDetailModal = ({ isOpen, onClose, contract, isDark }) => {
+      if (!isOpen || !contract) return null;
+
+      const handleAIAgent = () => {
+        console.log('AI Agent executing mitigation for contract:', contract.id);
+        alert('AI Agent is now executing mitigation steps. You will receive updates via Slack.');
+      };
+
+      const handleOverlayClick = (e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      };
+
+      const handleClose = (e) => {
+        e.stopPropagation();
+        onClose();
+      };
+
+      const predictiveData = {
+        estimatedTimeToResolution: contract.riskScore >= 70 ? "12-15 days" : contract.riskScore >= 40 ? "5-8 days" : "2-4 days",
+        estimatedLegalHours: contract.riskScore >= 70 ? "24-32 hours" : contract.riskScore >= 40 ? "12-18 hours" : "4-8 hours",
+        budgetImpact: contract.riskScore >= 70 ? "$8,000-$12,000" : contract.riskScore >= 40 ? "$4,000-$6,000" : "$1,500-$3,000",
+        capacityForecast: contract.riskScore >= 70 ? "High capacity needed" : contract.riskScore >= 40 ? "Moderate capacity" : "Low capacity",
+        similarContractsInPipeline: contract.riskScore >= 70 ? 5 : contract.riskScore >= 40 ? 3 : 1
+      };
+
+      return (
+        <>
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-50" onClick={handleOverlayClick} />
+          <div className="fixed inset-0 flex items-center justify-center z-50 p-2 md:p-4 overflow-y-auto pointer-events-none">
+            <div className={`${isDark ? 'bg-gray-800 text-white' : 'bg-white'} brutal-border rounded-2xl p-4 md:p-8 max-w-3xl w-full hard-shadow my-4 md:my-8 transition-colors pointer-events-auto max-h-[90vh] overflow-y-auto`} onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between mb-6 thick-rule pb-4">
+                <div>
+                  <div className="text-xs font-bold text-gray-500 mb-1">RISK ANALYSIS</div>
+                  <h2 className="font-brutal text-3xl mb-2">{contract.name}</h2>
+                </div>
+                <button
+                  onClick={handleClose}
+                  className={`brutal-border-thin ${isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-white'} p-2 rounded-lg hard-shadow-hover transition-all`}
+                >
+                  <svg className={`w-6 h-6 ${isDark ? 'text-white' : 'text-black'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <div className="space-y-6">
+                <div className={`${isDark ? 'bg-red-800' : 'bg-red-100'} brutal-border rounded-xl p-4 md:p-6`}>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-brutal text-lg md:text-xl">RISK LEVEL: {contract.riskDetails.level.toUpperCase()}</h3>
+                    <div className={`w-16 h-16 rounded-full brutal-border-2 flex items-center justify-center font-black text-2xl ${
+                      contract.riskScore >= 70 ? 'bg-red-200' : contract.riskScore >= 40 ? 'bg-yellow-100' : 'bg-green-100'
+                    }`}>
+                      {contract.riskScore}
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-brutal text-xl mb-3">RISK FACTORS</h3>
+                  <ul className="space-y-2">
+                    {contract.riskDetails.factors.map((factor, index) => (
+                      <li key={index} className="flex items-start">
+                        <span className="font-black mr-2">•</span>
+                        <span className={`font-medium ${isDark ? 'text-gray-200' : ''}`}>{factor}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className={`${isDark ? 'bg-yellow-900' : 'bg-yellow-50'} brutal-border rounded-xl p-4 md:p-6`}>
+                  <h3 className="font-brutal text-lg md:text-xl mb-4">MITIGATION STEPS</h3>
+                  <ol className="space-y-3">
+                    {contract.riskDetails.mitigation.map((step, index) => (
+                      <li key={index} className="flex items-start">
+                        <span className="font-black mr-3 min-w-[24px]">{index + 1}.</span>
+                        <span className="font-medium">{step}</span>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+
+                <div className={`${isDark ? 'bg-blue-900' : 'bg-blue-50'} brutal-border rounded-xl p-4 md:p-6`}>
+                  <h3 className="font-brutal text-lg md:text-xl mb-4 thick-rule pb-4">PREDICTIVE INTELLIGENCE</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <div className={`text-xs font-bold mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>EST. TIME TO RESOLUTION</div>
+                      <div className={`text-2xl font-black ${isDark ? 'text-white' : 'text-black'}`}>{predictiveData.estimatedTimeToResolution}</div>
+                    </div>
+                    <div>
+                      <div className={`text-xs font-bold mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>EST. LEGAL HOURS</div>
+                      <div className={`text-2xl font-black ${isDark ? 'text-white' : 'text-black'}`}>{predictiveData.estimatedLegalHours}</div>
+                    </div>
+                    <div>
+                      <div className={`text-xs font-bold mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>BUDGET IMPACT</div>
+                      <div className={`text-2xl font-black ${isDark ? 'text-white' : 'text-black'}`}>{predictiveData.budgetImpact}</div>
+                    </div>
+                    <div>
+                      <div className={`text-xs font-bold mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>CAPACITY FORECAST</div>
+                      <div className={`text-2xl font-black ${isDark ? 'text-white' : 'text-black'}`}>{predictiveData.capacityForecast}</div>
+                    </div>
+                  </div>
+                  <div className={`mt-4 pt-4 ${isDark ? 'border-t-2 border-white' : 'border-t-2 border-black'}`}>
+                    <div className={`text-xs font-bold mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>SIMILAR CONTRACTS IN PIPELINE</div>
+                    <div className={`text-xl font-black ${isDark ? 'text-white' : 'text-black'}`}>{predictiveData.similarContractsInPipeline} contracts</div>
+                  </div>
+                </div>
+
+                <div className="flex space-x-3">
+                  <button
+                    onClick={handleAIAgent}
+                    className="brutal-border-thin bg-blue-100 text-black px-6 py-3 rounded-full font-black hard-shadow-hover transition-all flex-1 flex items-center justify-center space-x-2"
+                  >
+                    <span>🤖</span>
+                    <span>AI AGENT EXECUTE</span>
+                  </button>
+                  <button className="brutal-border-thin bg-black text-white px-6 py-3 rounded-full font-black hard-shadow-hover transition-all flex-1">
+                    CREATE TASK LIST
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      );
+    };
+
+    const ContractTable = ({ contracts, onRowClick, onViewClick, isDark }) => {
+      const [selectedRiskContract, setSelectedRiskContract] = useState(null);
+      const [showRiskModal, setShowRiskModal] = useState(false);
+      const [tooltips, setTooltips] = useState({});
+
+      const handleRiskClick = (e, contract) => {
+        e.stopPropagation();
+        setSelectedRiskContract(contract);
+        setShowRiskModal(true);
+      };
+
+      const handleDealMemo = (e, contract) => {
+        e.stopPropagation();
+        console.log('Generating deal memo for:', contract.id);
+        alert(`Deal memo generated for ${contract.name}. Document ready for download.`);
+      };
+
+      const handleViewClick = (e, contract) => {
+        e.stopPropagation();
+        onViewClick?.(contract);
+      };
+
+      const showTooltip = (key) => {
+        setTooltips(prev => ({ ...prev, [key]: true }));
+      };
+
+      const hideTooltip = (key) => {
+        setTooltips(prev => ({ ...prev, [key]: false }));
+      };
+
+      return (
+        <>
+          <section>
+            <div className={`${isDark ? 'bg-gray-900' : 'bg-white'} brutal-border rounded-2xl overflow-hidden hard-shadow transition-colors`}>
+              <div className={`${isDark ? 'bg-yellow-200' : 'bg-yellow-100'} brutal-border-b-4 px-6 py-4`}>
+                <h2 className="font-brutal text-2xl">CONTRACT QUEUE</h2>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[800px]">
+                <thead className={isDark ? 'bg-gray-800' : 'bg-gray-100'}>
+                  <tr>
+                    <th className="brutal-border-thin px-4 py-4 text-left font-brutal text-xs">NAME</th>
+                    <th className="brutal-border-thin px-4 py-4 text-left font-brutal text-xs">STATUS</th>
+                    <th className="brutal-border-thin px-4 py-4 text-left font-brutal text-xs">SLA</th>
+                    <th className="brutal-border-thin px-4 py-4 text-left font-brutal text-xs">VALUE</th>
+                    <th className="brutal-border-thin px-4 py-4 text-left font-brutal text-xs">RISK</th>
+                    <th className="brutal-border-thin px-4 py-4 text-left font-brutal text-xs">ACTIONS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {contracts.map((contract) => (
+                    <tr
+                      key={contract.id}
+                      onClick={() => onRowClick(contract)}
+                      className={`brutal-border-thin ${isDark ? 'hover:bg-gray-800' : 'hover:bg-blue-50'} cursor-pointer transition-colors`}
+                    >
+                      <td className={`px-4 py-4 brutal-border-thin ${isDark ? 'text-white' : ''}`}>
+                        <div className="font-black">{contract.name}</div>
+                        <div className={`text-xs font-bold ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{contract.id}</div>
+                      </td>
+                      <td className="px-4 py-4 brutal-border-thin">
+                        <StatusPill status={contract.status} />
+                      </td>
+                      <td className="px-4 py-4 brutal-border-thin">
+                        <ProgressBar progress={contract.slaProgress} daysRemaining={contract.slaDaysRemaining} />
+                      </td>
+                      <td className={`px-4 py-4 brutal-border-thin ${isDark ? 'text-white' : ''}`}>
+                        <div className="font-black">
+                          {contract.value > 0 ? `$${(contract.value / 1000).toFixed(0)}k` : 'N/A'}
+                        </div>
+                        <div className={`text-xs font-bold ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{contract.valueLabel}</div>
+                      </td>
+                      <td className="px-4 py-4 brutal-border-thin" onClick={(e) => handleRiskClick(e, contract)}>
+                        <RiskCircle score={contract.riskScore} onClick={(e) => handleRiskClick(e, contract)} />
+                      </td>
+                      <td className="px-4 py-4 brutal-border-thin">
+                        <div className="flex items-center space-x-2">
+                          <div className="relative">
+                            <button 
+                              className={`brutal-border-thin ${isDark ? 'bg-gray-800' : 'bg-white'} p-2 rounded-lg hard-shadow-hover transition-all`}
+                              onMouseEnter={() => showTooltip(`deal-${contract.id}`)}
+                              onMouseLeave={() => hideTooltip(`deal-${contract.id}`)}
+                              onClick={(e) => handleDealMemo(e, contract)}
+                            >
+                              <svg className={`w-5 h-5 ${isDark ? 'text-white' : 'text-black'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                              </svg>
+                            </button>
+                            {tooltips[`deal-${contract.id}`] && (
+                              <div className="tooltip tooltip-visible">Generate deal memo</div>
+                            )}
+                          </div>
+                          <SendDropdown contract={contract} isDark={isDark} />
+                          <div className="relative">
+                            <button 
+                              className={`brutal-border-thin ${isDark ? 'bg-gray-800' : 'bg-white'} p-2 rounded-lg hard-shadow-hover transition-all`}
+                              onMouseEnter={() => showTooltip(`view-${contract.id}`)}
+                              onMouseLeave={() => hideTooltip(`view-${contract.id}`)}
+                              onClick={(e) => handleViewClick(e, contract)}
+                            >
+                              <svg className={`w-5 h-5 ${isDark ? 'text-white' : 'text-black'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                              </svg>
+                            </button>
+                            {tooltips[`view-${contract.id}`] && (
+                              <div className="tooltip tooltip-visible">View contract details</div>
+                            )}
+                          </div>
+                          <EditDropdown contract={contract} isDark={isDark} />
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+          <RiskDetailModal
+            isOpen={showRiskModal}
+            onClose={() => setShowRiskModal(false)}
+            contract={selectedRiskContract}
+            isDark={isDark}
+          />
+        </>
+      );
+    };
+
+    const TimelineStep = ({ step, isLast, isDark }) => {
+      return (
+        <div className="flex items-start">
+          <div className="flex flex-col items-center mr-4">
+            <div
+              className={`w-8 h-8 rounded-full brutal-border-2 flex items-center justify-center ${
+                step.completed
+                  ? 'bg-green-200'
+                  : step.inProgress
+                  ? 'bg-blue-200'
+                  : 'bg-gray-100'
+              }`}
+            >
+              {step.completed && (
+                <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+            </div>
+            {!isLast && (
+              <div className={`w-1 h-12 ${isDark ? 'bg-white' : 'bg-black'}`}></div>
+            )}
+          </div>
+          <div className="flex-1 pb-6">
+            <div className={`font-black text-lg ${isDark ? 'text-white' : 'text-black'}`}>{step.label.toUpperCase()}</div>
+            {step.reviewer && (
+              <div className={`text-sm font-bold ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                {step.reviewer} - {step.role}
+              </div>
+            )}
+            {step.days && (
+              <div className={`text-sm font-bold ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{step.days} days</div>
+            )}
+            {step.inProgress && (
+              <div className="text-sm font-black text-blue-600">IN PROGRESS</div>
+            )}
+          </div>
+        </div>
+      );
+    };
+
+    const IntegrationButton = ({ name }) => {
+      return (
+        <button className="brutal-border-thin bg-white rounded-xl p-4 hard-shadow hard-shadow-hover transition-all flex flex-col items-center justify-center">
+          <div className="w-12 h-12 mb-2 bg-yellow-100 rounded-lg brutal-border-thin flex items-center justify-center">
+            <span className="text-lg font-black text-black">
+              {name.charAt(0)}
+            </span>
+          </div>
+          <span className="text-xs font-black text-black">{name.toUpperCase()}</span>
+        </button>
+      );
+    };
+
+    const EscalateDropdown = ({ contract, isDark }) => {
+      const [isOpen, setIsOpen] = useState(false);
+      const dropdownRef = useRef(null);
+
+      useEffect(() => {
+        const handleClickOutside = (event) => {
+          if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+            setIsOpen(false);
+          }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+      }, []);
+
+      const handleEscalate = (team) => {
+        console.log(`Escalating contract ${contract.id} to ${team}`);
+        alert(`Contract escalated to ${team}. They will be notified.`);
+        setIsOpen(false);
+      };
+
+      return (
+        <div className="relative" ref={dropdownRef}>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsOpen(!isOpen);
+            }}
+            className={`brutal-border-thin ${isDark ? 'bg-yellow-200' : 'bg-yellow-100'} text-black px-6 py-3 rounded-full font-black hard-shadow-hover transition-all`}
+          >
+            ESCALATE
+          </button>
+          {isOpen && (
+            <div className={`absolute right-0 mt-2 ${isDark ? 'bg-gray-800' : 'bg-white'} brutal-border rounded-xl hard-shadow z-50 min-w-[220px]`}>
+              <button
+                onClick={() => handleEscalate('Finance')}
+                className={`w-full px-4 py-3 text-left ${isDark ? 'hover:bg-gray-700' : 'hover:bg-blue-50'} brutal-border-b-2 last:border-b-0 font-bold flex items-center space-x-3`}
+              >
+                <div className="w-8 h-8 bg-green-200 brutal-border-thin rounded-lg flex items-center justify-center">
+                  <span className="text-sm font-black">$</span>
+                </div>
+                <span>Finance</span>
+              </button>
+              <button
+                onClick={() => handleEscalate('Procurement')}
+                className={`w-full px-4 py-3 text-left ${isDark ? 'hover:bg-gray-700' : 'hover:bg-blue-50'} brutal-border-b-2 last:border-b-0 font-bold flex items-center space-x-3`}
+              >
+                <div className="w-8 h-8 bg-blue-200 brutal-border-thin rounded-lg flex items-center justify-center">
+                  <span className="text-sm font-black">P</span>
+                </div>
+                <span>Procurement</span>
+              </button>
+              <button
+                onClick={() => handleEscalate('LegalOps')}
+                className={`w-full px-4 py-3 text-left ${isDark ? 'hover:bg-gray-700' : 'hover:bg-blue-50'} brutal-border-b-2 last:border-b-0 font-bold flex items-center space-x-3`}
+              >
+                <div className="w-8 h-8 bg-purple-200 brutal-border-thin rounded-lg flex items-center justify-center">
+                  <span className="text-sm font-black">L</span>
+                </div>
+                <span>LegalOps</span>
+              </button>
+            </div>
+          )}
+        </div>
+      );
+    };
+
+    const DetailDrawer = ({ contract, isOpen, onClose, isDark }) => {
+      const [notes, setNotes] = useState(contract?.notes || '');
+
+      useEffect(() => {
+        if (contract) {
+          setNotes(contract.notes || '');
+        }
+      }, [contract]);
+
+      const handleOverlayClick = (e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      };
+
+      if (!isOpen || !contract) {
+        return null;
+      }
+
+      return (
+        <>
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 z-40"
+            onClick={handleOverlayClick}
+          />
+          <div className={`fixed right-0 top-0 h-full w-full md:w-1/2 lg:w-1/3 ${isDark ? 'bg-gray-800' : 'bg-white'} brutal-border-l-4 z-40 overflow-y-auto hard-shadow transition-colors`} onClick={(e) => e.stopPropagation()}>
+            <div className={`sticky top-0 ${isDark ? 'bg-yellow-200' : 'bg-yellow-100'} brutal-border-b-4 px-6 py-4 flex items-center justify-between`}>
+              <h2 className="font-brutal text-2xl text-black">{contract.name.toUpperCase()}</h2>
+              <button
+                onClick={onClose}
+                className="brutal-border-thin bg-white p-2 rounded-lg hard-shadow-hover transition-all"
+                aria-label="Close"
+              >
+                <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="p-6 space-y-8">
+              <section className={`${isDark ? 'bg-gray-800' : 'bg-blue-50'} brutal-border rounded-2xl p-6 hard-shadow`}>
+                <h3 className="font-brutal text-xl mb-4 thick-rule pb-4">TIMELINE</h3>
+                <div>
+                  {contract.timeline.steps.map((step, index) => (
+                    <TimelineStep
+                      key={index}
+                      step={step}
+                      isLast={index === contract.timeline.steps.length - 1}
+                      isDark={isDark}
+                    />
+                  ))}
+                </div>
+              </section>
+              <section className={`${isDark ? 'bg-gray-800' : 'bg-green-50'} brutal-border rounded-2xl p-6 hard-shadow`}>
+                <h3 className="font-brutal text-xl mb-4 thick-rule pb-4">INTEGRATIONS</h3>
+                <div className="grid grid-cols-3 gap-3">
+                  {contract.integrations.map((integration, index) => (
+                    <IntegrationButton key={index} name={integration} />
+                  ))}
+                </div>
+              </section>
+              {contract.playbook && contract.playbook.relevant && (
+                <section className={`${isDark ? 'bg-gray-800' : 'bg-orange-50'} brutal-border rounded-2xl p-6 hard-shadow`}>
+                  <h3 className="font-brutal text-xl mb-4 thick-rule pb-4">RELEVANT PLAYBOOK</h3>
+                  {contract.playbook.applicablePlaybooks && contract.playbook.applicablePlaybooks.length > 0 && (
+                    <div className={`${isDark ? 'bg-gray-900' : 'bg-white'} brutal-border-thin rounded-lg p-4 mb-4`}>
+                      <div className={`text-sm font-bold ${isDark ? 'text-gray-300' : 'text-gray-600'} mb-2`}>APPLICABLE PLAYBOOKS:</div>
+                      <div className="flex flex-wrap gap-2">
+                        {contract.playbook.applicablePlaybooks.map((playbook, index) => (
+                          <span key={index} className={`px-3 py-1 rounded-full text-xs font-black brutal-border-thin ${isDark ? 'bg-blue-900 text-white' : 'bg-blue-100 text-black'}`}>
+                            {playbook}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {contract.playbook.updatesNeeded && contract.playbook.updatesNeeded.length > 0 ? (
+                    <div className="space-y-3">
+                      <div className={`${isDark ? 'bg-red-900' : 'bg-red-100'} brutal-border-thin rounded-lg p-4`}>
+                        <div className={`font-black mb-2 flex items-center space-x-2 ${isDark ? 'text-red-200' : 'text-red-800'}`}>
+                          <span>⚠️</span>
+                          <span>UPDATES NEEDED</span>
+                        </div>
+                        <ul className="space-y-2">
+                          {contract.playbook.updatesNeeded.map((update, index) => (
+                            <li key={index} className="flex items-start">
+                              <span className={`font-black mr-2 ${isDark ? 'text-red-200' : 'text-red-800'}`}>•</span>
+                              <span className={`font-medium ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>{update}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      <button className="brutal-border-thin bg-black text-white px-6 py-3 rounded-full font-black hard-shadow-hover transition-all w-full">
+                        UPDATE PLAYBOOK
+                      </button>
+                    </div>
+                  ) : (
+                    <div className={`${isDark ? 'bg-green-900' : 'bg-green-100'} brutal-border-thin rounded-lg p-4`}>
+                      <div className={`font-black ${isDark ? 'text-green-200' : 'text-green-800'}`}>✓ Playbook is up to date</div>
+                    </div>
+                  )}
+                </section>
+              )}
+              <section className={`${isDark ? 'bg-gray-800' : 'bg-white'} brutal-border rounded-2xl p-6 hard-shadow`}>
+                <h3 className="font-brutal text-xl mb-4 thick-rule pb-4">INTERNAL NOTES</h3>
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  className={`w-full px-4 py-3 brutal-border-thin rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-200 resize-none font-medium ${isDark ? 'bg-gray-900 text-white' : ''}`}
+                  rows={4}
+                  placeholder="ADD NOTES..."
+                />
+                <div className="flex space-x-3 mt-4">
+                  <button className="brutal-border-thin bg-black text-white px-6 py-3 rounded-full font-black hard-shadow-hover transition-all">
+                    SAVE CHANGES
+                  </button>
+                  <EscalateDropdown contract={contract} isDark={isDark} />
+                </div>
+              </section>
+            </div>
+          </div>
+        </>
+      );
+    };
+
+    // Main App
+    function App() {
+      const [selectedContract, setSelectedContract] = useState(null);
+      const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+      const [exposureModal, setExposureModal] = useState({ isOpen: false, data: null, department: '', clause: '' });
+      const [isDark, setIsDark] = useState(false);
+
+      useEffect(() => {
+        if (isDark) {
+          document.body.classList.add('dark');
+          document.body.classList.remove('bg-white');
+          document.body.classList.add('bg-gray-900');
+        } else {
+          document.body.classList.remove('dark');
+          document.body.classList.remove('bg-gray-900');
+          document.body.classList.add('bg-white');
+        }
+      }, [isDark]);
+
+      const handleRowClick = (contract) => {
+        setSelectedContract(contract);
+        setIsDrawerOpen(true);
+      };
+
+      const handleCloseDrawer = () => {
+        setIsDrawerOpen(false);
+        setSelectedContract(null);
+      };
+
+      const handleExposureCellClick = (key, cellData) => {
+        const [department, clause] = key.split('-');
+        setExposureModal({
+          isOpen: true,
+          data: cellData,
+          department,
+          clause
+        });
+      };
+
+      const handleToggleDark = () => {
+        setIsDark(!isDark);
+      };
+
+      return (
+        <div className={`min-h-screen transition-colors ${isDark ? 'bg-gray-900 text-white' : 'bg-white'}`}>
+          <TopNav isDark={isDark} onToggleDark={handleToggleDark} />
+          <div className="mt-12 px-4 md:px-6 py-8">
+            <div className="max-w-7xl mx-auto">
+              <h1 className={`font-brutal text-3xl md:text-5xl mb-8 thick-rule pb-4 ${isDark ? 'text-white' : ''}`}>
+                CONTRACT DASHBOARD
+              </h1>
+              <KPIGrid isDark={isDark} />
+              <OrgMetrics isDark={isDark} />
+              <ExposureHeatmap onCellClick={handleExposureCellClick} isDark={isDark} />
+              <ContractTable contracts={contracts} onRowClick={handleRowClick} onViewClick={handleRowClick} isDark={isDark} />
+            </div>
+          </div>
+          <DetailDrawer
+            contract={selectedContract}
+            isOpen={isDrawerOpen}
+            onClose={handleCloseDrawer}
+            isDark={isDark}
+          />
+          <ExposureAnalysisModal
+            isOpen={exposureModal.isOpen}
+            onClose={() => setExposureModal({ isOpen: false, data: null, department: '', clause: '' })}
+            cellData={exposureModal.data}
+            department={exposureModal.department}
+            clause={exposureModal.clause}
+            isDark={isDark}
+          />
+        </div>
+      );
+    }
+
+    // Render
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>

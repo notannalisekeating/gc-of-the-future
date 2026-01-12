@@ -150,6 +150,54 @@
     .dark .tooltip::after {
       border-top-color: #f9fafb;
     }
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 16px 24px;
+      background: #1f2937;
+      color: white;
+      border-radius: 8px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      z-index: 10000;
+      animation: slideIn 0.3s ease-out;
+      max-width: 400px;
+    }
+    .dark .toast {
+      background: #f9fafb;
+      color: #1f2937;
+    }
+    .toast.success {
+      background: #10b981;
+      color: white;
+    }
+    .toast.error {
+      background: #ef4444;
+      color: white;
+    }
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+    @keyframes slideOut {
+      from {
+        transform: translateX(0);
+        opacity: 1;
+      }
+      to {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+    }
+    .toast.hiding {
+      animation: slideOut 0.3s ease-out forwards;
+    }
   </style>
 </head>
 <body class="bg-white">
@@ -585,6 +633,15 @@
       contractsAtRisk: 3
     };
 
+    // Activity feed data
+    const recentActivity = [
+      { id: 1, type: 'approval', contract: 'CT-2024-001', user: 'Michael Park', action: 'approved', time: '5 minutes ago', icon: '✓' },
+      { id: 2, type: 'review', contract: 'CT-2024-004', user: 'Sarah Chen', action: 'started review', time: '12 minutes ago', icon: '👁️' },
+      { id: 3, type: 'update', contract: 'CT-2024-002', user: 'Jennifer Lee', action: 'updated playbook', time: '1 hour ago', icon: '📝' },
+      { id: 4, type: 'escalation', contract: 'CT-2024-006', user: 'David Kim', action: 'escalated to Finance', time: '2 hours ago', icon: '🚨' },
+      { id: 5, type: 'completion', contract: 'CT-2024-011', user: 'System', action: 'contract executed', time: '3 hours ago', icon: '✅' },
+    ];
+
     const heatmapData = {
       rows: ["Global Sales", "Engineering", "Marketing", "HR"],
       cols: ["Liability", "IP Rights", "Termination", "Data Privacy"],
@@ -720,8 +777,106 @@
       },
     };
 
+    // Toast Notification Component
+    const Toast = ({ message, type = 'info', onClose }) => {
+      useEffect(() => {
+        const timer = setTimeout(() => {
+          onClose();
+        }, 3000);
+        return () => clearTimeout(timer);
+      }, [onClose]);
+
+      return (
+        <div className={`toast ${type}`}>
+          <div className="flex items-center justify-between">
+            <span className="font-bold">{message}</span>
+            <button onClick={onClose} className="ml-4 text-white opacity-70 hover:opacity-100">
+              ×
+            </button>
+          </div>
+        </div>
+      );
+    };
+
+    // Priority Action Panel Component
+    const PriorityActionPanel = ({ contracts, onContractClick, isDark }) => {
+      const urgentContracts = contracts.filter(c => 
+        c.slaDaysRemaining <= 2 || c.riskScore >= 70 || c.status === 'On Hold'
+      ).slice(0, 5);
+
+      if (urgentContracts.length === 0) return null;
+
+      return (
+        <div className={`${isDark ? 'bg-red-900' : 'bg-red-100'} brutal-border rounded-xl md:rounded-2xl p-4 md:p-6 hard-shadow mb-6 md:mb-8`}>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-brutal text-lg md:text-2xl">🚨 ACTION REQUIRED</h2>
+            <span className={`px-3 py-1 rounded-full text-xs font-black brutal-border-thin ${isDark ? 'bg-red-800 text-white' : 'bg-red-200 text-black'}`}>
+              {urgentContracts.length} URGENT
+            </span>
+          </div>
+          <div className="space-y-2">
+            {urgentContracts.map(contract => (
+              <div
+                key={contract.id}
+                onClick={() => onContractClick(contract)}
+                className={`${isDark ? 'bg-gray-800 hover:bg-gray-700' : 'bg-white hover:bg-red-50'} brutal-border-thin rounded-lg p-3 cursor-pointer hard-shadow-hover transition-all`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className={`font-black text-sm md:text-base ${isDark ? 'text-white' : 'text-black'}`}>{contract.name}</div>
+                    <div className={`text-xs font-bold mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                      {contract.slaDaysRemaining <= 2 && `⚠️ ${contract.slaDaysRemaining} days until SLA deadline`}
+                      {contract.riskScore >= 70 && `🔴 High risk (${contract.riskScore})`}
+                      {contract.status === 'On Hold' && `⏸️ On Hold`}
+                    </div>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onContractClick(contract);
+                    }}
+                    className={`brutal-border-thin ${isDark ? 'bg-yellow-200 text-black' : 'bg-yellow-100 text-black'} px-3 md:px-4 py-1 md:py-2 rounded-full font-black text-xs md:text-sm hard-shadow-hover transition-all ml-2`}
+                  >
+                    REVIEW
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    };
+
+    // Activity Feed Component
+    const ActivityFeed = ({ activities, isDark }) => {
+      return (
+        <div className={`${isDark ? 'bg-gray-800' : 'bg-green-50'} brutal-border rounded-xl md:rounded-2xl p-4 md:p-6 hard-shadow`}>
+          <h3 className="font-brutal text-base md:text-xl mb-4 thick-rule pb-3 md:pb-4">RECENT ACTIVITY</h3>
+          <div className="space-y-3">
+            {activities.map(activity => (
+              <div key={activity.id} className={`${isDark ? 'bg-gray-900' : 'bg-white'} brutal-border-thin rounded-lg p-3`}>
+                <div className="flex items-start space-x-3">
+                  <div className={`w-8 h-8 rounded-full brutal-border-2 flex items-center justify-center font-black text-sm ${isDark ? 'bg-blue-900' : 'bg-blue-100'}`}>
+                    {activity.icon}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className={`text-sm font-bold ${isDark ? 'text-white' : 'text-black'}`}>
+                      <span className="font-black">{activity.user}</span> {activity.action} <span className="font-black">{activity.contract}</span>
+                    </div>
+                    <div className={`text-xs font-bold mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                      {activity.time}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    };
+
     // Components
-    const TopNav = ({ isDark, onToggleDark }) => {
+    const TopNav = ({ isDark, onToggleDark, searchQuery, onSearchChange, onExport }) => {
       return (
         <nav className={`brutal-border ${isDark ? 'bg-gray-900 text-white' : 'bg-white'} px-3 md:px-6 py-3 md:py-4 relative transition-colors`}>
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 md:gap-0">
@@ -731,7 +886,9 @@
             <div className="flex items-center space-x-2 md:space-x-3 w-full md:w-auto">
               <input
                 type="text"
-                placeholder="SEARCH..."
+                placeholder="SEARCH CONTRACTS..."
+                value={searchQuery}
+                onChange={(e) => onSearchChange(e.target.value)}
                 className={`brutal-border-thin px-2 md:px-4 py-2 rounded-lg hard-shadow focus:outline-none focus:ring-2 text-sm md:text-base flex-1 md:flex-none ${isDark ? 'bg-gray-800 text-white border-white focus:ring-yellow-400' : 'bg-white focus:ring-yellow-300'}`}
               />
               <button
@@ -741,7 +898,10 @@
               >
                 {isDark ? '☀️' : '🌙'}
               </button>
-              <button className={`brutal-border-thin ${isDark ? 'bg-white text-black' : 'bg-black text-white'} px-3 md:px-6 py-2 rounded-full font-bold hard-shadow-hover transition-all text-xs md:text-sm whitespace-nowrap`}>
+              <button 
+                onClick={onExport}
+                className={`brutal-border-thin ${isDark ? 'bg-white text-black' : 'bg-black text-white'} px-3 md:px-6 py-2 rounded-full font-bold hard-shadow-hover transition-all text-xs md:text-sm whitespace-nowrap`}
+              >
                 EXPORT
               </button>
             </div>
@@ -1095,6 +1255,9 @@
         console.log(`Sending contract ${contract.id} status via ${method}`);
         setIsOpen(false);
         onClose?.();
+        if (window.showToast) {
+          window.showToast(`Contract status sent via ${method}`, 'success');
+        }
       };
 
       return (
@@ -1220,7 +1383,11 @@
 
       const handleAIAgent = () => {
         console.log('AI Agent executing mitigation for contract:', contract.id);
-        alert('AI Agent is now executing mitigation steps. You will receive updates via Slack.');
+        if (window.showToast) {
+          window.showToast('AI Agent is executing mitigation steps. Updates will be sent via Slack.', 'success');
+        } else {
+          alert('AI Agent is now executing mitigation steps. You will receive updates via Slack.');
+        }
       };
 
       const handleOverlayClick = (e) => {
@@ -1357,7 +1524,12 @@
       const handleDealMemo = (e, contract) => {
         e.stopPropagation();
         console.log('Generating deal memo for:', contract.id);
-        alert(`Deal memo generated for ${contract.name}. Document ready for download.`);
+        // In a real app, this would trigger an API call
+        if (window.showToast) {
+          window.showToast(`Deal memo generated for ${contract.name}`, 'success');
+        } else {
+          alert(`Deal memo generated for ${contract.name}. Document ready for download.`);
+        }
       };
 
       const handleViewClick = (e, contract) => {
@@ -1542,8 +1714,12 @@
 
       const handleEscalate = (team) => {
         console.log(`Escalating contract ${contract.id} to ${team}`);
-        alert(`Contract escalated to ${team}. They will be notified.`);
         setIsOpen(false);
+        if (window.showToast) {
+          window.showToast(`Contract escalated to ${team}. They will be notified.`, 'success');
+        } else {
+          alert(`Contract escalated to ${team}. They will be notified.`);
+        }
       };
 
       return (
@@ -1716,12 +1892,44 @@
       );
     };
 
+    // Export functionality
+    const exportToCSV = (contractsToExport, searchQuery) => {
+      const headers = ['ID', 'Name', 'Status', 'SLA Days Remaining', 'Value', 'Risk Score', 'Value Label'];
+      const rows = contractsToExport.map(c => [
+        c.id,
+        c.name,
+        c.status,
+        c.slaDaysRemaining,
+        c.value,
+        c.riskScore,
+        c.valueLabel
+      ]);
+      
+      const csvContent = [
+        headers.join(','),
+        ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+      ].join('\n');
+      
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `contracts-export-${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    };
+
     // Main App
     function App() {
       const [selectedContract, setSelectedContract] = useState(null);
       const [isDrawerOpen, setIsDrawerOpen] = useState(false);
       const [exposureModal, setExposureModal] = useState({ isOpen: false, data: null, department: '', clause: '' });
       const [isDark, setIsDark] = useState(false);
+      const [searchQuery, setSearchQuery] = useState('');
+      const [toast, setToast] = useState(null);
+      const [filteredContracts, setFilteredContracts] = useState(contracts);
 
       useEffect(() => {
         if (isDark) {
@@ -1734,6 +1942,20 @@
           document.body.classList.add('bg-white');
         }
       }, [isDark]);
+
+      useEffect(() => {
+        if (searchQuery.trim() === '') {
+          setFilteredContracts(contracts);
+        } else {
+          const query = searchQuery.toLowerCase();
+          setFilteredContracts(contracts.filter(c => 
+            c.name.toLowerCase().includes(query) ||
+            c.id.toLowerCase().includes(query) ||
+            c.status.toLowerCase().includes(query) ||
+            c.valueLabel.toLowerCase().includes(query)
+          ));
+        }
+      }, [searchQuery]);
 
       const handleRowClick = (contract) => {
         setSelectedContract(contract);
@@ -1759,18 +1981,73 @@
         setIsDark(!isDark);
       };
 
+      const showToast = (message, type = 'info') => {
+        setToast({ message, type, id: Date.now() });
+      };
+
+      // Make showToast available globally for other components
+      useEffect(() => {
+        window.showToast = showToast;
+        return () => {
+          delete window.showToast;
+        };
+      }, []);
+
+      const handleExport = () => {
+        exportToCSV(filteredContracts, searchQuery);
+        showToast('Contract data exported successfully!', 'success');
+      };
+
+      const handleContractAction = (contract, action) => {
+        showToast(`${action} action performed on ${contract.name}`, 'success');
+        // Here you would typically update the contract status
+      };
+
       return (
         <div className={`min-h-screen transition-colors ${isDark ? 'bg-gray-900 text-white' : 'bg-white'}`}>
-          <TopNav isDark={isDark} onToggleDark={handleToggleDark} />
+          <TopNav 
+            isDark={isDark} 
+            onToggleDark={handleToggleDark}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            onExport={handleExport}
+          />
           <div className="mt-8 md:mt-12 px-3 md:px-6 py-4 md:py-8">
             <div className="max-w-7xl mx-auto">
               <h1 className={`font-brutal text-2xl md:text-5xl mb-4 md:mb-8 thick-rule pb-3 md:pb-4 ${isDark ? 'text-white' : ''}`}>
                 CONTRACT DASHBOARD
               </h1>
+              <PriorityActionPanel 
+                contracts={contracts} 
+                onContractClick={handleRowClick}
+                isDark={isDark}
+              />
               <KPIGrid isDark={isDark} />
-              <OrgMetrics isDark={isDark} />
-              <ExposureHeatmap onCellClick={handleExposureCellClick} isDark={isDark} />
-              <ContractTable contracts={contracts} onRowClick={handleRowClick} onViewClick={handleRowClick} isDark={isDark} />
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 mb-6 md:mb-8">
+                <div className="lg:col-span-2">
+                  <OrgMetrics isDark={isDark} />
+                  <ExposureHeatmap onCellClick={handleExposureCellClick} isDark={isDark} />
+                </div>
+                <div className="lg:col-span-1">
+                  <ActivityFeed activities={recentActivity} isDark={isDark} />
+                </div>
+              </div>
+              {searchQuery && (
+                <div className={`${isDark ? 'bg-blue-900' : 'bg-blue-50'} brutal-border rounded-lg p-3 md:p-4 mb-4 md:mb-6`}>
+                  <div className="flex items-center justify-between">
+                    <span className={`font-bold text-sm md:text-base ${isDark ? 'text-white' : 'text-black'}`}>
+                      Showing {filteredContracts.length} of {contracts.length} contracts
+                    </span>
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className={`brutal-border-thin ${isDark ? 'bg-gray-800 text-white' : 'bg-white text-black'} px-3 py-1 rounded-full font-bold text-xs hard-shadow-hover transition-all`}
+                    >
+                      CLEAR
+                    </button>
+                  </div>
+                </div>
+              )}
+              <ContractTable contracts={filteredContracts} onRowClick={handleRowClick} onViewClick={handleRowClick} isDark={isDark} />
             </div>
           </div>
           <DetailDrawer
@@ -1787,6 +2064,13 @@
             clause={exposureModal.clause}
             isDark={isDark}
           />
+          {toast && (
+            <Toast
+              message={toast.message}
+              type={toast.type}
+              onClose={() => setToast(null)}
+            />
+          )}
         </div>
       );
     }

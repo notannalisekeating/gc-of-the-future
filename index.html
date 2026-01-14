@@ -19,8 +19,11 @@
     body, html {
       margin: 0;
       padding: 0;
-      overflow-x: hidden; /* This prevents the right-side gap */
+    }
+    body {
       width: 100%;
+      min-height: 100vh;
+      overflow-x: hidden;
     }
     :root {
       /* Dark Mode - Refined Cyberpunk Palette */
@@ -1311,10 +1314,10 @@
 
     const ExposureHeatmap = ({ onCellClick, isDark }) => {
       return (
-        <section className="mb-8 w-full">
+        <section className="mb-8 w-full overflow-visible">
           <div className={`${isDark ? 'bg-gray-800' : 'bg-blue-50'} brutal-border rounded-2xl p-6 hard-shadow`}>
             <h2 className="font-brutal text-2xl mb-4 thick-rule pb-4">EXPOSURE ANALYSIS</h2>
-            <div className="brutal-border rounded-xl overflow-hidden bg-white">
+            <div className="brutal-border rounded-xl overflow-x-auto bg-white">
               <table className="w-full border-collapse" style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr className="bg-gray-100">
@@ -1330,12 +1333,12 @@
                       <td className="brutal-border-thin p-4 font-black bg-gray-50">{row}</td>
                       {heatmapData.cols.map(col => {
                         const cell = heatmapData.cells[`${row}-${col}`];
-                        const colors = { high: 'var(--heatmap-red)', medium: 'var(--heatmap-orange)', low: 'var(--heatmap-green)' };
+                        const colors = { high: '#FCA5A5', medium: '#FEEB99', low: '#BBF7D0' };
                         return (
                           <td 
                             key={`${row}-${col}`}
                             onClick={() => onCellClick(`${row}-${col}`, cell)}
-                            className={`brutal-border-thin p-4 text-center font-black cursor-pointer hover:opacity-80 ${isDark ? 'dark-heatmap-cell' : ''}`}
+                            className={`brutal-border-thin p-4 text-center font-black cursor-pointer hover:opacity-80 ${isDark ? 'opacity-40' : ''}`}
                             style={{ backgroundColor: colors[cell.risk] }}
                           >
                             {cell.value}%
@@ -1893,7 +1896,7 @@
                           }}>SLA</th>
                       <th className="brutal-border-thin px-3 md:px-4 py-3 md:py-4 text-left font-brutal text-xs whitespace-nowrap" style={{ color: isDark ? 'var(--dark-text-primary)' : '#000' }}>VALUE</th>
                       <th className="brutal-border-thin px-3 md:px-4 py-3 md:py-4 text-center font-brutal text-xs whitespace-nowrap" style={{ color: isDark ? 'var(--dark-text-primary)' : '#000' }}>RISK</th>
-                      <th className="brutal-border-thin px-3 md:px-4 py-3 md:py-4 text-left font-brutal text-xs whitespace-nowrap" style={{ color: isDark ? 'var(--dark-text-primary)' : '#000', width: '160px' }}>ACTIONS</th>
+                      <th className="brutal-border-thin px-3 md:px-4 py-3 md:py-4 text-left font-brutal text-xs whitespace-nowrap" style={{ color: isDark ? 'var(--dark-text-primary)' : '#000', width: '150px' }}>ACTIONS</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1948,7 +1951,7 @@
                             <RiskCircle score={contract.riskScore} onClick={(e) => handleRiskClick(e, contract)} isDark={isDark} />
                           </div>
                         </td>
-                        <td className="px-3 md:px-4 py-3 md:py-4 brutal-border-thin whitespace-nowrap text-center" style={{ borderColor: isDark ? 'var(--dark-border)' : '#000', width: '160px' }}>
+                        <td className="px-3 md:px-4 py-3 md:py-4 brutal-border-thin whitespace-nowrap text-center" style={{ borderColor: isDark ? 'var(--dark-border)' : '#000', width: '150px' }}>
                           {/* Desktop: Icons */}
                           <div className="hidden md:flex items-center justify-start space-x-2 w-full">
                             <div className="relative">
@@ -2011,14 +2014,16 @@
                               <button 
                                 type="button"
                                 onClick={(e) => {
+                                  e.stopPropagation();
                                   e.preventDefault();
-                                  e.stopPropagation(); // CRITICAL: This stops the row click from interference
                                   onViewClick(contract);
                                 }}
                                 className="brutal-border-thin p-2 rounded-lg bg-white hard-shadow-hover flex items-center justify-center min-w-[44px] min-h-[44px]"
+                                title="View contract details"
                               >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                 </svg>
                               </button>
                               <EditDropdown contract={contract} isDark={isDark} />

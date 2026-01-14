@@ -13,6 +13,15 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
+    * {
+      box-sizing: border-box !important;
+    }
+    body, html {
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden; /* This prevents the right-side gap */
+      width: 100%;
+    }
     :root {
       /* Dark Mode - Refined Cyberpunk Palette */
       --dark-bg-primary: #0B0E14;
@@ -27,36 +36,41 @@
       --light-text-primary: #1F2328;
       --light-text-secondary: #656D76;
       
-      /* Heatmap Colors - High Intensity with Integration */
-      --heatmap-red: rgba(239, 68, 68, 0.9);
-      --heatmap-orange: rgba(251, 146, 60, 0.9);
-      --heatmap-green: rgba(34, 197, 94, 0.9);
-    }
-
-    * {
-      box-sizing: border-box;
+      /* Heatmap Colors - Light Shades */
+      --heatmap-red: #FCA5A5;
+      --heatmap-orange: #FEEB99;
+      --heatmap-green: #BBF7D0;
     }
     body {
       font-family: 'Inter', sans-serif;
       transition: background-color 0.3s, color 0.3s;
-      max-width: 100vw;
-      width: 100vw;
-      margin: 0;
-      padding: 0;
-      overflow-x: hidden;
-    }
-    html {
-      max-width: 100vw;
-      width: 100vw;
-      margin: 0;
-      padding: 0;
-      overflow-x: hidden;
     }
     /* Allow horizontal scrolling for tables only */
     section, .overflow-x-auto {
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
       scrollbar-gutter: stable;
+    }
+    /* Table base styles */
+    table {
+      table-layout: auto;
+      margin: 0;
+    }
+    /* Remove fixed widths from table parent containers */
+    .overflow-x-auto {
+      max-width: 100% !important;
+      min-width: 0 !important;
+    }
+    /* Prevent section overflow */
+    section {
+      max-width: 100% !important;
+      box-sizing: border-box;
+    }
+    /* Fix table containers */
+    .brutal-border.rounded-xl,
+    .brutal-border.rounded-2xl {
+      box-sizing: border-box;
+      max-width: 100%;
     }
     /* Style scrollbars to be visible */
     ::-webkit-scrollbar {
@@ -76,9 +90,10 @@
     }
     /* Prevent horizontal scroll on main container but allow on tables */
     .max-w-7xl {
-      max-width: 100%;
-      overflow-x: visible;
       width: 100%;
+      max-width: 80rem; /* 1280px */
+      margin-left: auto;
+      margin-right: auto;
     }
     .font-brutal {
       font-family: 'Archivo Black', 'Impact', sans-serif;
@@ -133,6 +148,17 @@
     }
     .dark .thick-rule {
       border-bottom: 4px solid var(--dark-border);
+    }
+    
+    /* Night Mode Heatmap Cell Opacity */
+    .dark .dark-heatmap-cell,
+    .dark td[style*="--heatmap-red"],
+    .dark td[style*="--heatmap-orange"],
+    .dark td[style*="--heatmap-green"],
+    .dark td[style*="#FCA5A5"],
+    .dark td[style*="#FEEB99"],
+    .dark td[style*="#BBF7D0"] {
+      opacity: 0.4;
     }
     
     /* Light Mode Text Refinement */
@@ -879,7 +905,7 @@
 
     // Priority Action Panel Component
     const PriorityActionPanel = ({ contracts, onContractClick, isDark }) => {
-      const [isExpanded, setIsExpanded] = useState(true);
+      const [isExpanded, setIsExpanded] = useState(false);
       const urgentContracts = contracts.filter(c => 
         c.slaDaysRemaining <= 2 || c.riskScore >= 70 || c.status === 'On Hold'
       ).slice(0, 5);
@@ -895,7 +921,7 @@
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-brutal text-lg md:text-2xl whitespace-nowrap flex items-center" style={{ color: isDark ? 'var(--dark-text-primary)' : '#000' }}>🚨 ACTION REQUIRED</h2>
             <div className="flex items-center gap-3">
-              <span className="px-3 py-1 rounded-full text-xs font-black brutal-border-thin whitespace-nowrap"
+              <span className="px-3 py-1 rounded-full text-xs font-black brutal-border-thin whitespace-nowrap flex-shrink-0"
                     style={isDark ? { 
                       backgroundColor: 'var(--heatmap-red)', 
                       color: 'var(--dark-text-primary)',
@@ -949,13 +975,13 @@
                       </div>
                     </div>
                     <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (onContractClick) {
-                      onContractClick(contract);
-                    }
-                  }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (onContractClick) {
+                        onContractClick(contract);
+                      }
+                    }}
                     type="button"
                     className="brutal-border-thin px-3 md:px-4 py-1 md:py-2 rounded-full font-black text-xs md:text-sm hard-shadow-hover transition-all ml-2"
                     style={isDark ? { 
@@ -977,7 +1003,7 @@
 
     // Activity Feed Component
     const ActivityFeed = ({ activities, isDark }) => {
-      const [isExpanded, setIsExpanded] = useState(true);
+      const [isExpanded, setIsExpanded] = useState(false);
       
       return (
         <div className="brutal-border rounded-xl md:rounded-2xl p-4 md:p-6 hard-shadow"
@@ -1069,8 +1095,8 @@
                 }}
               />
             </div>
-            {/* Row 3: Export Button - Centered with 1rem top margin */}
-            <div className="flex justify-center" style={{ marginTop: '1rem' }}>
+            {/* Row 3: Export Button - Centered with 1.5rem top margin */}
+            <div className="flex justify-center" style={{ marginTop: '1.5rem' }}>
               <button 
                 onClick={onExport}
                 type="button"
@@ -1203,18 +1229,23 @@
           }
         } else {
           switch(risk) {
-            case 'high': return { backgroundColor: '#FCA5A5', color: '#000' };
-            case 'medium': return { backgroundColor: '#FEEB99', color: '#000' };
-            case 'low': return { backgroundColor: '#BBF7D0', color: '#000' };
+            case 'high': return { backgroundColor: 'var(--heatmap-red)', color: '#000' };
+            case 'medium': return { backgroundColor: 'var(--heatmap-orange)', color: '#000' };
+            case 'low': return { backgroundColor: 'var(--heatmap-green)', color: '#000' };
             default: return { backgroundColor: '#E5E7EB', color: '#000' };
           }
         }
       };
 
+      const cellStyle = getCellStyle();
+      if (isDark) {
+        cellStyle.opacity = 0.4;
+      }
+
       return (
         <td 
           className="brutal-border-thin text-center font-black py-4 px-4 cursor-pointer hard-shadow-hover transition-all"
-          style={getCellStyle()}
+          style={cellStyle}
           onClick={onClick}
         >
           <span className="text-lg">{value}%</span>
@@ -1279,81 +1310,42 @@
     };
 
     const ExposureHeatmap = ({ onCellClick, isDark }) => {
-      const [showScrollIndicator, setShowScrollIndicator] = useState(true);
-      const scrollContainerRef = useRef(null);
-
-      useEffect(() => {
-        const container = scrollContainerRef.current;
-        if (!container) return;
-
-        const handleScroll = () => {
-          const { scrollLeft, scrollWidth, clientWidth } = container;
-          const isAtEnd = scrollLeft + clientWidth >= scrollWidth - 10;
-          setShowScrollIndicator(!isAtEnd && scrollLeft === 0);
-        };
-
-        container.addEventListener('scroll', handleScroll);
-        return () => container.removeEventListener('scroll', handleScroll);
-      }, []);
-
       return (
-        <section className="mb-6 md:mb-8 w-full">
-          <div className={`${isDark ? 'bg-gray-800' : 'bg-blue-50'} brutal-border rounded-xl md:rounded-2xl p-4 md:p-6 hard-shadow`}>
-            <h2 className="font-brutal text-lg md:text-2xl mb-4 thick-rule pb-4">EXPOSURE ANALYSIS</h2>
-            
-            {/* Table View with Scroll Indicator */}
-            <div className={`${isDark ? 'bg-gray-900' : 'bg-white'} brutal-border rounded-xl overflow-hidden relative`}
-                 style={{ width: '100%', scrollbarGutter: 'stable' }}>
-              {/* Scroll Indicator for Mobile */}
-              {showScrollIndicator && (
-                <div className="md:hidden absolute top-2 right-2 z-20 brutal-border-thin px-3 py-2 rounded-lg text-xs font-black shadow-lg pointer-events-none transition-opacity"
-                     style={isDark ? { backgroundColor: 'var(--dark-accent-yellow)', color: '#000', borderColor: 'var(--dark-border)' } : { backgroundColor: '#FEEB99', color: '#000', borderColor: '#000' }}>
-                  Scroll for more →
-                </div>
-              )}
-              
-              <div className="overflow-x-auto" ref={scrollContainerRef} style={{ WebkitOverflowScrolling: 'touch', scrollbarGutter: 'stable', width: '100%' }}>
-                <table className="w-full" style={{ width: '100%', tableLayout: 'auto' }}>
-                  <thead>
-                    <tr style={isDark ? { backgroundColor: 'var(--dark-bg-card)' } : { backgroundColor: '#F3F4F6' }}>
-                      <th className="brutal-border-thin px-3 md:px-4 py-3 text-left font-brutal text-xs md:text-sm whitespace-nowrap"
-                          style={{ color: isDark ? 'var(--dark-text-primary)' : '#000' }}></th>
-                      {heatmapData.cols.map((col) => (
-                        <th
-                          key={col}
-                          className="brutal-border-thin px-3 md:px-4 py-3 text-center font-brutal text-xs md:text-sm whitespace-nowrap"
-                          style={{ color: isDark ? 'var(--dark-text-primary)' : '#000' }}
-                        >
-                          {col}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {heatmapData.rows.map((row) => (
-                      <tr key={row}>
-                        <td className="brutal-border-thin px-3 md:px-4 py-3 font-black text-sm md:text-base whitespace-nowrap"
-                            style={isDark ? { color: 'var(--dark-text-primary)', backgroundColor: 'var(--dark-bg-card)' } : { color: '#000', backgroundColor: '#F3F4F6' }}>
-                          {row}
-                        </td>
-                        {heatmapData.cols.map((col) => {
-                          const key = `${row}-${col}`;
-                          const cell = heatmapData.cells[key];
-                          return (
-                            <HeatmapCell
-                              key={key}
-                              value={cell.value}
-                              risk={cell.risk}
-                              onClick={() => onCellClick(key, cell)}
-                              isDark={isDark}
-                            />
-                          );
-                        })}
-                      </tr>
+        <section className="mb-8 w-full">
+          <div className={`${isDark ? 'bg-gray-800' : 'bg-blue-50'} brutal-border rounded-2xl p-6 hard-shadow`}>
+            <h2 className="font-brutal text-2xl mb-4 thick-rule pb-4">EXPOSURE ANALYSIS</h2>
+            <div className="brutal-border rounded-xl overflow-hidden bg-white">
+              <table className="w-full border-collapse" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="brutal-border-thin p-4"></th>
+                    {heatmapData.cols.map(col => (
+                      <th key={col} className="brutal-border-thin p-4 font-brutal text-sm">{col}</th>
                     ))}
-                  </tbody>
-                </table>
-              </div>
+                  </tr>
+                </thead>
+                <tbody>
+                  {heatmapData.rows.map(row => (
+                    <tr key={row}>
+                      <td className="brutal-border-thin p-4 font-black bg-gray-50">{row}</td>
+                      {heatmapData.cols.map(col => {
+                        const cell = heatmapData.cells[`${row}-${col}`];
+                        const colors = { high: 'var(--heatmap-red)', medium: 'var(--heatmap-orange)', low: 'var(--heatmap-green)' };
+                        return (
+                          <td 
+                            key={`${row}-${col}`}
+                            onClick={() => onCellClick(`${row}-${col}`, cell)}
+                            className={`brutal-border-thin p-4 text-center font-black cursor-pointer hover:opacity-80 ${isDark ? 'dark-heatmap-cell' : ''}`}
+                            style={{ backgroundColor: colors[cell.risk] }}
+                          >
+                            {cell.value}%
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         </section>
@@ -1505,14 +1497,14 @@
       const colorClass = progress >= 70 ? 'bg-green-200' : progress >= 40 ? 'bg-yellow-100' : 'bg-red-200';
       
       return (
-        <div className="flex items-center space-x-2" style={{ minWidth: '120px' }}>
-          <div className="flex-1 bg-gray-200 brutal-border-thin rounded-full overflow-hidden" style={{ minWidth: '80px', height: '16px' }}>
+        <div className="flex items-center" style={{ width: '80px', height: '12px' }}>
+          <div className="bg-gray-200 brutal-border-thin rounded-full overflow-hidden" style={{ width: '80px', height: '12px' }}>
             <div
               className={`h-full ${colorClass} transition-all`}
               style={{ width: `${progress}%`, height: '100%' }}
             />
           </div>
-          <span className="text-xs md:text-sm font-black text-black whitespace-nowrap">{daysRemaining}d</span>
+          <span className="text-xs md:text-sm font-black text-black whitespace-nowrap" style={{ marginLeft: '8px' }}>{daysRemaining}d</span>
         </div>
       );
     };
@@ -1832,12 +1824,14 @@
       }, []);
 
       const handleRiskClick = (e, contract) => {
+        e.preventDefault();
         e.stopPropagation();
         setSelectedRiskContract(contract);
         setShowRiskModal(true);
       };
 
       const handleDealMemo = (e, contract) => {
+        e.preventDefault();
         e.stopPropagation();
         console.log('Generating deal memo for:', contract.id);
         // In a real app, this would trigger an API call
@@ -1849,11 +1843,12 @@
       };
 
       const handleViewClick = (e, contract) => {
-        e.preventDefault();
         e.stopPropagation();
+        e.preventDefault();
         if (onViewClick) {
           onViewClick(contract);
         }
+        return false;
       };
 
       const showTooltip = (key) => {
@@ -1866,16 +1861,16 @@
 
       return (
         <>
-          <section className="w-full">
-            <div className="brutal-border rounded-xl md:rounded-2xl overflow-hidden hard-shadow transition-colors w-full"
-                 style={isDark ? { backgroundColor: 'var(--dark-bg-card)', borderColor: 'var(--dark-border)' } : { backgroundColor: '#fff' }}>
+          <section style={{ width: '100%', maxWidth: '100%', overflow: 'hidden', boxSizing: 'border-box' }}>
+            <div className="brutal-border rounded-xl md:rounded-2xl overflow-hidden hard-shadow transition-colors"
+                 style={isDark ? { backgroundColor: 'var(--dark-bg-card)', borderColor: 'var(--dark-border)', maxWidth: '100%', boxSizing: 'border-box' } : { backgroundColor: '#fff', maxWidth: '100%', boxSizing: 'border-box' }}>
               <div className="brutal-border-b-4 px-4 md:px-6 py-3 md:py-4"
                    style={isDark ? { backgroundColor: 'var(--dark-accent-yellow)', borderColor: 'var(--dark-border)' } : { backgroundColor: '#FEEB99' }}>
                 <h2 className="font-brutal text-lg md:text-2xl" style={isDark ? { color: '#000' } : {}}>CONTRACT QUEUE</h2>
               </div>
               
               {/* Table View with Scroll Indicator */}
-              <div className="relative">
+              <div className="relative" style={{ maxWidth: '100%', boxSizing: 'border-box' }}>
                 {/* Scroll Indicator for Mobile */}
                 {showScrollIndicator && (
                   <div className="md:hidden absolute top-2 right-2 z-20 brutal-border-thin px-3 py-2 rounded-lg text-xs font-black shadow-lg pointer-events-none transition-opacity"
@@ -1884,9 +1879,9 @@
                   </div>
                 )}
                 
-                <div className="overflow-x-auto" ref={scrollContainerRef} style={{ WebkitOverflowScrolling: 'touch', scrollbarGutter: 'stable' }}>
-                  <table className="w-full min-w-[700px] md:min-w-[800px]"
-                         style={{ tableLayout: 'auto' }}>
+                <div className="overflow-x-auto" ref={scrollContainerRef} style={{ WebkitOverflowScrolling: 'touch', scrollbarGutter: 'stable', maxWidth: '100%', boxSizing: 'border-box' }}>
+                  <table className="w-full"
+                         style={{ width: '100%', tableLayout: 'auto', margin: 0, borderCollapse: 'collapse' }}>
                   <thead style={isDark ? { backgroundColor: 'var(--dark-bg-card)' } : { backgroundColor: '#F3F4F6' }}>
                     <tr>
                       <th className="brutal-border-thin px-3 md:px-4 py-3 md:py-4 text-left font-brutal text-xs whitespace-nowrap" style={{ color: isDark ? 'var(--dark-text-primary)' : '#000' }}>NAME</th>
@@ -1894,12 +1889,11 @@
                       <th className="brutal-border-thin px-3 md:px-4 py-3 md:py-4 text-left font-brutal text-xs whitespace-nowrap" 
                           style={{ 
                             color: isDark ? 'var(--dark-text-primary)' : '#000',
-                            width: '100px',
-                            whiteSpace: 'nowrap'
+                            minWidth: '120px'
                           }}>SLA</th>
                       <th className="brutal-border-thin px-3 md:px-4 py-3 md:py-4 text-left font-brutal text-xs whitespace-nowrap" style={{ color: isDark ? 'var(--dark-text-primary)' : '#000' }}>VALUE</th>
-                      <th className="brutal-border-thin px-3 md:px-4 py-3 md:py-4 text-left font-brutal text-xs whitespace-nowrap" style={{ color: isDark ? 'var(--dark-text-primary)' : '#000' }}>RISK</th>
-                      <th className="brutal-border-thin px-3 md:px-4 py-3 md:py-4 text-left font-brutal text-xs whitespace-nowrap" style={{ color: isDark ? 'var(--dark-text-primary)' : '#000', width: '1%' }}>ACTIONS</th>
+                      <th className="brutal-border-thin px-3 md:px-4 py-3 md:py-4 text-center font-brutal text-xs whitespace-nowrap" style={{ color: isDark ? 'var(--dark-text-primary)' : '#000' }}>RISK</th>
+                      <th className="brutal-border-thin px-3 md:px-4 py-3 md:py-4 text-left font-brutal text-xs whitespace-nowrap" style={{ color: isDark ? 'var(--dark-text-primary)' : '#000', width: '160px' }}>ACTIONS</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1907,7 +1901,12 @@
                       <tr
                         key={contract.id}
                         onClick={(e) => {
+                          // Don't trigger row click if clicking on action buttons
+                          if (e.target.closest('button') || e.target.closest('.relative')) {
+                            return;
+                          }
                           e.preventDefault();
+                          e.stopPropagation();
                           if (onRowClick) {
                             onRowClick(contract);
                           }
@@ -1935,8 +1934,7 @@
                         <td className="px-3 md:px-4 py-3 md:py-4 brutal-border-thin whitespace-nowrap">
                           <StatusPill status={contract.status} isDark={isDark} />
                         </td>
-                        <td className="px-3 md:px-4 py-3 md:py-4 brutal-border-thin whitespace-nowrap" 
-                            style={{ width: '100px', whiteSpace: 'nowrap', minWidth: '100px', maxWidth: '100px' }}>
+                        <td className="px-3 md:px-4 py-3 md:py-4 brutal-border-thin whitespace-nowrap" style={{ minWidth: '120px' }}>
                           <ProgressBar progress={contract.slaProgress} daysRemaining={contract.slaDaysRemaining} />
                         </td>
                         <td className="px-3 md:px-4 py-3 md:py-4 brutal-border-thin whitespace-nowrap" style={{ color: isDark ? 'var(--dark-text-primary)' : '#000', borderColor: isDark ? 'var(--dark-border)' : '#000' }}>
@@ -1945,12 +1943,14 @@
                           </div>
                           <div className="text-xs font-bold" style={{ color: isDark ? 'var(--dark-text-secondary)' : '#6B7280' }}>{contract.valueLabel}</div>
                         </td>
-                        <td className="px-3 md:px-4 py-3 md:py-4 brutal-border-thin whitespace-nowrap" style={{ borderColor: isDark ? 'var(--dark-border)' : '#000' }} onClick={(e) => handleRiskClick(e, contract)}>
-                          <RiskCircle score={contract.riskScore} onClick={(e) => handleRiskClick(e, contract)} isDark={isDark} />
+                        <td className="px-3 md:px-4 py-3 md:py-4 brutal-border-thin whitespace-nowrap text-center" style={{ borderColor: isDark ? 'var(--dark-border)' : '#000' }} onClick={(e) => handleRiskClick(e, contract)}>
+                          <div className="flex justify-center">
+                            <RiskCircle score={contract.riskScore} onClick={(e) => handleRiskClick(e, contract)} isDark={isDark} />
+                          </div>
                         </td>
-                        <td className="px-3 md:px-4 py-3 md:py-4 brutal-border-thin whitespace-nowrap" style={{ borderColor: isDark ? 'var(--dark-border)' : '#000' }}>
+                        <td className="px-3 md:px-4 py-3 md:py-4 brutal-border-thin whitespace-nowrap text-center" style={{ borderColor: isDark ? 'var(--dark-border)' : '#000', width: '160px' }}>
                           {/* Desktop: Icons */}
-                          <div className="hidden md:flex items-center space-x-2">
+                          <div className="hidden md:flex items-center justify-start space-x-2 w-full">
                             <div className="relative">
                               <button 
                                 className="brutal-border-thin p-2 rounded-lg hard-shadow-hover transition-all min-w-[44px] min-h-[44px]"
@@ -1971,11 +1971,15 @@
                             <SendDropdown contract={contract} isDark={isDark} />
                             <div className="relative flex items-center justify-center">
                               <button 
-                                className="brutal-border-thin p-2 rounded-lg hard-shadow-hover transition-all min-w-[44px] min-h-[44px] flex items-center justify-center"
-                                style={isDark ? { backgroundColor: 'var(--dark-bg-primary)', borderColor: 'var(--dark-border)', color: 'var(--dark-text-primary)' } : { backgroundColor: '#fff', color: '#000' }}
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  e.preventDefault();
+                                  onViewClick(contract);
+                                }}
+                                className="brutal-border-thin p-2 rounded-lg bg-white hard-shadow-hover flex items-center justify-center min-w-[44px] min-h-[44px]"
                                 onMouseEnter={() => showTooltip(`view-${contract.id}`)}
                                 onMouseLeave={() => hideTooltip(`view-${contract.id}`)}
-                                onClick={(e) => handleViewClick(e, contract)}
                                 title="View contract details"
                               >
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2005,14 +2009,16 @@
                               </button>
                               <SendDropdown contract={contract} isDark={isDark} />
                               <button 
-                                className="brutal-border-thin p-2 rounded-lg hard-shadow-hover transition-all min-w-[44px] min-h-[44px]"
-                                style={isDark ? { backgroundColor: 'var(--dark-bg-primary)', borderColor: 'var(--dark-border)', color: 'var(--dark-text-primary)' } : { backgroundColor: '#fff', color: '#000' }}
-                                onClick={(e) => handleViewClick(e, contract)}
-                                title="View contract details"
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation(); // CRITICAL: This stops the row click from interference
+                                  onViewClick(contract);
+                                }}
+                                className="brutal-border-thin p-2 rounded-lg bg-white hard-shadow-hover flex items-center justify-center min-w-[44px] min-h-[44px]"
                               >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                 </svg>
                               </button>
                               <EditDropdown contract={contract} isDark={isDark} />
@@ -2179,33 +2185,16 @@
       }
 
       return (
-        <>
-          <div
-            className="fixed inset-0 bg-black bg-opacity-50 z-50"
-            onClick={handleOverlayClick}
-          />
-          <div className={`fixed right-0 top-0 h-full w-full md:w-1/2 lg:w-1/3 brutal-border-l-4 z-[100] overflow-y-auto hard-shadow transition-colors relative`}
-               style={{ 
-                 backgroundColor: isDark ? 'var(--dark-bg-card)' : '#fff',
-                 borderColor: isDark ? 'var(--dark-border)' : '#000',
-                 scrollbarGutter: 'stable'
-               }}
-               onClick={(e) => e.stopPropagation()}>
-            <div className={`sticky top-0 ${isDark ? 'bg-yellow-200' : 'bg-yellow-100'} brutal-border-b-4 px-6 py-4 flex items-center justify-between`}>
-              <h2 className="font-brutal text-2xl text-black">{contract.name.toUpperCase()}</h2>
-              <button
-                onClick={onClose}
-                className="brutal-border-thin bg-white p-2 rounded-lg hard-shadow-hover transition-all"
-                aria-label="Close"
-              >
-                <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+        <div className="fixed inset-0 z-[100] flex justify-end" style={{ pointerEvents: 'auto' }}>
+          <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+          <div className="relative w-full md:w-1/3 h-full bg-white brutal-border-l-4 overflow-y-auto" style={{ zIndex: 100, pointerEvents: 'auto' }}>
+            <div className="sticky top-0 brutal-border-b-4 p-6 flex justify-between items-center" style={{ backgroundColor: '#FEF3C7' }}>
+              <h2 className="font-brutal text-2xl text-black" style={{ fontFamily: "'Archivo Black', sans-serif", color: '#000' }}>{contract.name}</h2>
+              <button onClick={onClose} className="brutal-border-thin p-2 bg-white">✕</button>
             </div>
-            <div className="p-6 space-y-8">
-              <section className={`${isDark ? 'bg-gray-800' : 'bg-blue-50'} brutal-border rounded-2xl p-6 hard-shadow`}>
-                <h3 className="font-brutal text-xl mb-4 thick-rule pb-4">TIMELINE</h3>
+            <div className="p-6 space-y-6">
+              <div className="bg-blue-50 brutal-border-thin rounded-xl p-6 hard-shadow">
+                <h3 className="font-brutal text-lg mb-4 border-b-2 border-black pb-2">TIMELINE</h3>
                 <div>
                   {contract.timeline.steps.map((step, index) => (
                     <TimelineStep
@@ -2216,18 +2205,18 @@
                     />
                   ))}
                 </div>
-              </section>
-              <section className={`${isDark ? 'bg-gray-800' : 'bg-green-50'} brutal-border rounded-2xl p-6 hard-shadow`}>
-                <h3 className="font-brutal text-xl mb-4 thick-rule pb-4">INTEGRATIONS</h3>
+              </div>
+              <div className="bg-green-50 brutal-border-thin rounded-xl p-6 hard-shadow">
+                <h3 className="font-brutal text-lg mb-4 border-b-2 border-black pb-2">INTEGRATIONS</h3>
                 <div className="grid grid-cols-3 gap-3">
                   {contract.integrations.map((integration, index) => (
                     <IntegrationButton key={index} name={integration} />
                   ))}
                 </div>
-              </section>
+              </div>
               {contract.playbook && contract.playbook.relevant && (
-                <section className={`${isDark ? 'bg-gray-800' : 'bg-orange-50'} brutal-border rounded-2xl p-6 hard-shadow`}>
-                  <h3 className="font-brutal text-xl mb-4 thick-rule pb-4">RELEVANT PLAYBOOK</h3>
+                <div className="bg-orange-50 brutal-border-thin rounded-xl p-6 hard-shadow">
+                  <h3 className="font-brutal text-lg mb-4 border-b-2 border-black pb-2">RELEVANT PLAYBOOK</h3>
                   {contract.playbook.applicablePlaybooks && contract.playbook.applicablePlaybooks.length > 0 && (
                     <div className={`${isDark ? 'bg-gray-900' : 'bg-white'} brutal-border-thin rounded-lg p-4 mb-4`}>
                       <div className={`text-sm font-bold ${isDark ? 'text-gray-300' : 'text-gray-600'} mb-2`}>APPLICABLE PLAYBOOKS:</div>
@@ -2265,10 +2254,10 @@
                       <div className={`font-black ${isDark ? 'text-green-200' : 'text-green-800'}`}>✓ Playbook is up to date</div>
                     </div>
                   )}
-                </section>
+                </div>
               )}
-              <section className={`${isDark ? 'bg-gray-800' : 'bg-white'} brutal-border rounded-2xl p-6 hard-shadow`}>
-                <h3 className="font-brutal text-xl mb-4 thick-rule pb-4">INTERNAL NOTES</h3>
+              <section className={`${isDark ? 'bg-gray-800' : 'bg-white'} brutal-border-thin rounded-2xl p-6 hard-shadow`}>
+                <h3 className="font-brutal text-xl mb-4 thick-rule pb-4" style={{ fontFamily: "'Archivo Black', 'Impact', sans-serif" }}>INTERNAL NOTES</h3>
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
@@ -2285,7 +2274,7 @@
               </section>
             </div>
           </div>
-        </>
+        </div>
       );
     };
 
@@ -2405,9 +2394,6 @@
              style={{ 
                backgroundColor: isDark ? 'var(--dark-bg-primary)' : 'var(--light-bg-primary)',
                color: isDark ? 'var(--dark-text-primary)' : 'var(--light-text-primary)',
-               maxHeight: isDrawerOpen ? '100vh' : 'none',
-               overflow: isDrawerOpen ? 'hidden' : 'visible',
-               width: '100vw',
                margin: 0
              }}>
           <TopNav 
@@ -2417,7 +2403,7 @@
             onSearchChange={setSearchQuery}
             onExport={handleExport}
           />
-          <div className="mt-8 md:mt-12 px-3 md:px-6 py-4 md:py-8" style={{ width: '100%', maxWidth: '100vw' }}>
+          <div className="mt-8 md:mt-12 px-3 md:px-6 py-4 md:py-8" style={{ width: '100%' }}>
             <div className="max-w-7xl mx-auto w-full">
               <h1 className="font-brutal text-2xl md:text-5xl mb-4 md:mb-8 thick-rule pb-3 md:pb-4"
                   style={{ color: isDark ? 'var(--dark-text-primary)' : 'var(--light-text-primary)' }}>

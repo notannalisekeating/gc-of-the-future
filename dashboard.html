@@ -33,9 +33,52 @@
       --heatmap-green: rgba(34, 197, 94, 0.9);
     }
 
+    * {
+      box-sizing: border-box;
+    }
     body {
       font-family: 'Inter', sans-serif;
       transition: background-color 0.3s, color 0.3s;
+      max-width: 100vw;
+      width: 100vw;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+    }
+    html {
+      max-width: 100vw;
+      width: 100vw;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+    }
+    /* Allow horizontal scrolling for tables only */
+    section, .overflow-x-auto {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-gutter: stable;
+    }
+    /* Style scrollbars to be visible */
+    ::-webkit-scrollbar {
+      width: 12px;
+      height: 12px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #000;
+      border: 2px solid #000;
+      border-radius: 0;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #333;
+    }
+    /* Prevent horizontal scroll on main container but allow on tables */
+    .max-w-7xl {
+      max-width: 100%;
+      overflow-x: visible;
+      width: 100%;
     }
     .font-brutal {
       font-family: 'Archivo Black', 'Impact', sans-serif;
@@ -662,7 +705,8 @@
       totalContractsReviewed: 342,
       contractsThisMonth: 28,
       avgDeviationFromPlaybook: 12,
-      contractsAtRisk: 3
+      contractsAtRisk: 3,
+      outsideCounselSpend: 245000,
     };
 
     // Activity feed data
@@ -832,6 +876,7 @@
 
     // Priority Action Panel Component
     const PriorityActionPanel = ({ contracts, onContractClick, isDark }) => {
+      const [isExpanded, setIsExpanded] = useState(true);
       const urgentContracts = contracts.filter(c => 
         c.slaDaysRemaining <= 2 || c.riskScore >= 70 || c.status === 'On Hold'
       ).slice(0, 5);
@@ -846,36 +891,55 @@
              } : { backgroundColor: '#FEE2E2' }}>
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-brutal text-lg md:text-2xl" style={{ color: isDark ? 'var(--dark-text-primary)' : '#000' }}>🚨 ACTION REQUIRED</h2>
-            <span className="px-3 py-1 rounded-full text-xs font-black brutal-border-thin"
-                  style={isDark ? { 
-                    backgroundColor: 'var(--heatmap-red)', 
-                    color: 'var(--dark-text-primary)',
-                    borderColor: 'var(--dark-border)'
-                  } : { backgroundColor: '#FCA5A5', color: '#000' }}>
-              {urgentContracts.length} URGENT
-            </span>
-          </div>
-          <div className="space-y-2">
-            {urgentContracts.map(contract => (
-              <div
-                key={contract.id}
-                onClick={() => onContractClick(contract)}
-                className="brutal-border-thin rounded-lg p-3 cursor-pointer hard-shadow-hover transition-all"
-                style={isDark ? { 
-                  backgroundColor: 'var(--dark-bg-card)',
-                  borderColor: 'var(--dark-border)'
-                } : { backgroundColor: '#fff' }}
+            <div className="flex items-center gap-3">
+              <span className="px-3 py-1 rounded-full text-xs font-black brutal-border-thin"
+                    style={isDark ? { 
+                      backgroundColor: 'var(--heatmap-red)', 
+                      color: 'var(--dark-text-primary)',
+                      borderColor: 'var(--dark-border)'
+                    } : { backgroundColor: '#FCA5A5', color: '#000' }}>
+                {urgentContracts.length} URGENT
+              </span>
+              <button
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="brutal-border-thin p-2 rounded-lg hard-shadow-hover transition-all min-w-[44px] min-h-[44px] flex items-center justify-center"
+                style={isDark ? { backgroundColor: 'var(--dark-bg-primary)', borderColor: 'var(--dark-border)', color: 'var(--dark-text-primary)' } : { backgroundColor: '#fff', color: '#000' }}
+                aria-label={isExpanded ? "Collapse" : "Expand"}
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="font-black text-sm md:text-base" style={{ color: isDark ? 'var(--dark-text-primary)' : '#000' }}>{contract.name}</div>
-                    <div className="text-xs font-bold mt-1" style={{ color: isDark ? 'var(--dark-text-secondary)' : '#6B7280' }}>
-                      {contract.slaDaysRemaining <= 2 && `⚠️ ${contract.slaDaysRemaining} days until SLA deadline`}
-                      {contract.riskScore >= 70 && `🔴 High risk (${contract.riskScore})`}
-                      {contract.status === 'On Hold' && `⏸️ On Hold`}
+                <svg 
+                  className="w-5 h-5 transition-transform" 
+                  style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          {isExpanded && (
+            <div className="space-y-2">
+              {urgentContracts.map(contract => (
+                <div
+                  key={contract.id}
+                  onClick={() => onContractClick(contract)}
+                  className="brutal-border-thin rounded-lg p-3 cursor-pointer hard-shadow-hover transition-all"
+                  style={isDark ? { 
+                    backgroundColor: 'var(--dark-bg-card)',
+                    borderColor: 'var(--dark-border)'
+                  } : { backgroundColor: '#fff' }}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="font-black text-sm md:text-base" style={{ color: isDark ? 'var(--dark-text-primary)' : '#000' }}>{contract.name}</div>
+                      <div className="text-xs font-bold mt-1" style={{ color: isDark ? 'var(--dark-text-secondary)' : '#6B7280' }}>
+                        {contract.slaDaysRemaining <= 2 && `⚠️ ${contract.slaDaysRemaining} days until SLA deadline`}
+                        {contract.riskScore >= 70 && `🔴 High risk (${contract.riskScore})`}
+                        {contract.status === 'On Hold' && `⏸️ On Hold`}
+                      </div>
                     </div>
-                  </div>
-                  <button
+                    <button
                     onClick={(e) => {
                       e.stopPropagation();
                       onContractClick(contract);
@@ -892,58 +956,129 @@
                 </div>
               </div>
             ))}
-          </div>
+            </div>
+          )}
         </div>
       );
     };
 
     // Activity Feed Component
     const ActivityFeed = ({ activities, isDark }) => {
+      const [isExpanded, setIsExpanded] = useState(true);
+      
       return (
         <div className="brutal-border rounded-xl md:rounded-2xl p-4 md:p-6 hard-shadow"
              style={isDark ? { backgroundColor: 'var(--dark-bg-card)', borderColor: 'var(--dark-border)' } : { backgroundColor: '#F0FDF4' }}>
-          <h3 className="font-brutal text-base md:text-xl mb-4 thick-rule pb-3 md:pb-4" style={{ color: isDark ? 'var(--dark-text-primary)' : '#000' }}>RECENT ACTIVITY</h3>
-          <div className="space-y-3">
-            {activities.map(activity => (
-              <div key={activity.id} className="brutal-border-thin rounded-lg p-3"
-                   style={isDark ? { backgroundColor: 'var(--dark-bg-primary)', borderColor: 'var(--dark-border)' } : { backgroundColor: '#fff' }}>
-                <div className="flex items-start space-x-3">
-                  <div className="w-8 h-8 rounded-full brutal-border-2 flex items-center justify-center font-black text-sm"
-                       style={isDark ? { backgroundColor: 'rgba(59, 130, 246, 0.2)', borderColor: 'var(--dark-border)' } : { backgroundColor: '#DBEAFE' }}>
-                    {activity.icon}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-bold" style={{ color: isDark ? 'var(--dark-text-primary)' : 'var(--light-text-primary)' }}>
-                      <span className="font-black">{activity.user}</span> {activity.action} <span className="font-black">{activity.contract}</span>
+          <div className="flex items-center justify-between mb-4 thick-rule pb-3 md:pb-4">
+            <h3 className="font-brutal text-base md:text-xl" style={{ color: isDark ? 'var(--dark-text-primary)' : '#000' }}>RECENT ACTIVITY</h3>
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="brutal-border-thin p-2 rounded-lg hard-shadow-hover transition-all min-w-[44px] min-h-[44px] flex items-center justify-center"
+              style={isDark ? { backgroundColor: 'var(--dark-bg-primary)', borderColor: 'var(--dark-border)', color: 'var(--dark-text-primary)' } : { backgroundColor: '#fff', color: '#000' }}
+              aria-label={isExpanded ? "Collapse" : "Expand"}
+            >
+              <svg 
+                className="w-5 h-5 transition-transform" 
+                style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+          </div>
+          {isExpanded && (
+            <div className="space-y-3">
+              {activities.map(activity => (
+                <div key={activity.id} className="brutal-border-thin rounded-lg p-3"
+                     style={isDark ? { backgroundColor: 'var(--dark-bg-primary)', borderColor: 'var(--dark-border)' } : { backgroundColor: '#fff' }}>
+                  <div className="flex items-start space-x-3">
+                    <div className="w-8 h-8 rounded-full brutal-border-2 flex items-center justify-center font-black text-sm"
+                         style={isDark ? { backgroundColor: 'rgba(59, 130, 246, 0.2)', borderColor: 'var(--dark-border)' } : { backgroundColor: '#DBEAFE' }}>
+                      {activity.icon}
                     </div>
-                    <div className="text-xs font-bold mt-1" style={{ color: isDark ? 'var(--dark-text-secondary)' : 'var(--light-text-secondary)' }}>
-                      {activity.time}
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-bold" style={{ color: isDark ? 'var(--dark-text-primary)' : 'var(--light-text-primary)' }}>
+                        <span className="font-black">{activity.user}</span> {activity.action} <span className="font-black">{activity.contract}</span>
+                      </div>
+                      <div className="text-xs font-bold mt-1" style={{ color: isDark ? 'var(--dark-text-secondary)' : 'var(--light-text-secondary)' }}>
+                        {activity.time}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       );
     };
 
     // Components
     const TopNav = ({ isDark, onToggleDark, searchQuery, onSearchChange, onExport }) => {
+      const [showMobileMenu, setShowMobileMenu] = useState(false);
+      
       return (
         <nav className="brutal-border px-3 md:px-6 py-3 md:py-4 relative transition-colors"
              style={isDark ? { backgroundColor: 'var(--dark-bg-card)', color: 'var(--dark-text-primary)' } : { backgroundColor: '#fff' }}>
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 md:gap-0">
-            <div className="flex items-center space-x-2 md:space-x-4">
-              <div className="font-brutal text-lg md:text-2xl">GC OF THE FUTURE</div>
+          {/* Mobile Grid Layout */}
+          <div className="md:hidden grid gap-3"
+               style={{ gridTemplateAreas: '"title toggle" "search search" "export export"' }}>
+            <div style={{ gridArea: 'title' }} className="flex items-center">
+              <div className="font-brutal text-xl">GC OF THE FUTURE</div>
             </div>
-            <div className="flex items-center space-x-2 md:space-x-3 w-full md:w-auto">
+            <div style={{ gridArea: 'toggle' }} className="flex items-center justify-end">
+              <button
+                onClick={onToggleDark}
+                className="brutal-border-thin p-3 rounded-lg hard-shadow-hover transition-all min-w-[44px] min-h-[44px] flex items-center justify-center"
+                style={isDark ? { backgroundColor: 'var(--dark-accent-yellow)', color: '#000', borderColor: 'var(--dark-border)' } : { backgroundColor: '#1F2328', color: '#fff' }}
+                title={isDark ? "Light Mode" : "Dark Mode"}
+              >
+                {isDark ? '☀️' : '🌙'}
+              </button>
+            </div>
+            <div style={{ gridArea: 'search' }}>
               <input
                 type="text"
                 placeholder="SEARCH CONTRACTS..."
                 value={searchQuery}
                 onChange={(e) => onSearchChange(e.target.value)}
-                className="brutal-border-thin px-2 md:px-4 py-2 rounded-lg hard-shadow focus:outline-none focus:ring-2 text-sm md:text-base flex-1 md:flex-none"
+                className="brutal-border-thin px-4 py-3 rounded-lg hard-shadow focus:outline-none focus:ring-2 text-sm w-full min-h-[44px]"
+                style={isDark ? { 
+                  backgroundColor: 'var(--dark-bg-primary)', 
+                  color: 'var(--dark-text-primary)', 
+                  borderColor: 'var(--dark-border)',
+                  focusRingColor: 'var(--dark-accent-yellow)'
+                } : { 
+                  backgroundColor: '#fff',
+                  focusRingColor: '#FCD34D'
+                }}
+              />
+            </div>
+            <div style={{ gridArea: 'export' }}>
+              <button 
+                onClick={onExport}
+                className="brutal-border-thin px-6 py-3 rounded-full font-bold hard-shadow-hover transition-all text-sm w-full min-h-[44px]"
+                style={isDark ? { backgroundColor: 'var(--dark-accent-yellow)', color: '#000', borderColor: 'var(--dark-border)' } : { backgroundColor: '#000', color: '#fff' }}
+              >
+                EXPORT
+              </button>
+            </div>
+          </div>
+          
+          {/* Desktop Layout */}
+          <div className="hidden md:flex md:flex-row md:items-center md:justify-between md:gap-0">
+            <div className="flex items-center">
+              <div className="font-brutal text-2xl">GC OF THE FUTURE</div>
+            </div>
+            <div className="flex items-center gap-3">
+              <input
+                type="text"
+                placeholder="SEARCH CONTRACTS..."
+                value={searchQuery}
+                onChange={(e) => onSearchChange(e.target.value)}
+                className="brutal-border-thin px-4 py-2 rounded-lg hard-shadow focus:outline-none focus:ring-2 text-base w-auto min-h-[44px]"
                 style={isDark ? { 
                   backgroundColor: 'var(--dark-bg-primary)', 
                   color: 'var(--dark-text-primary)', 
@@ -956,7 +1091,7 @@
               />
               <button
                 onClick={onToggleDark}
-                className="brutal-border-thin p-2 rounded-lg hard-shadow-hover transition-all min-w-[44px] min-h-[44px]"
+                className="brutal-border-thin p-2 rounded-lg hard-shadow-hover transition-all min-w-[44px] min-h-[44px] flex items-center justify-center"
                 style={isDark ? { backgroundColor: 'var(--dark-accent-yellow)', color: '#000', borderColor: 'var(--dark-border)' } : { backgroundColor: '#1F2328', color: '#fff' }}
                 title={isDark ? "Light Mode" : "Dark Mode"}
               >
@@ -964,16 +1099,17 @@
               </button>
               <button 
                 onClick={onExport}
-                className="brutal-border-thin px-3 md:px-6 py-2 rounded-full font-bold hard-shadow-hover transition-all text-xs md:text-sm whitespace-nowrap"
+                className="brutal-border-thin px-6 py-2 rounded-full font-bold hard-shadow-hover transition-all text-sm whitespace-nowrap min-h-[44px]"
                 style={isDark ? { backgroundColor: 'var(--dark-accent-yellow)', color: '#000', borderColor: 'var(--dark-border)' } : { backgroundColor: '#000', color: '#fff' }}
               >
                 EXPORT
               </button>
             </div>
           </div>
-          <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-12 h-12 md:w-16 md:h-16 brutal-border rounded-full hard-shadow flex items-center justify-center"
-               style={isDark ? { backgroundColor: 'var(--dark-accent-yellow)', borderColor: 'var(--dark-border)' } : { backgroundColor: '#FEEB99' }}>
-            <span className="font-brutal text-base md:text-xl" style={isDark ? { color: '#000' } : {}}>GC</span>
+          
+          <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-12 h-12 md:w-16 md:h-16 brutal-border rounded-full hard-shadow flex items-center justify-center z-10"
+               style={isDark ? { backgroundColor: 'var(--dark-accent-yellow)', borderColor: 'var(--dark-border)' } : { backgroundColor: '#FEEB99', borderColor: '#000' }}>
+            <span className="font-brutal text-base md:text-xl" style={{ color: '#000' }}>GC</span>
           </div>
         </nav>
       );
@@ -1108,6 +1244,11 @@
               <div className="text-xs font-bold mb-1" style={{ color: isDark ? 'var(--dark-text-secondary)' : 'var(--light-text-secondary)' }}>AT RISK</div>
               <div className="text-2xl md:text-3xl font-black" style={{ color: '#EF4444' }}>{orgMetrics.contractsAtRisk}</div>
             </div>
+            <div className="brutal-border rounded-lg md:rounded-xl p-3 md:p-4 transition-colors"
+                 style={isDark ? { backgroundColor: 'var(--dark-bg-primary)', borderColor: 'var(--dark-border)' } : { backgroundColor: '#fff' }}>
+              <div className="text-xs font-bold mb-1" style={{ color: isDark ? 'var(--dark-text-secondary)' : 'var(--light-text-secondary)' }}>OUTSIDE COUNSEL SPEND</div>
+              <div className="text-2xl md:text-3xl font-black" style={{ color: isDark ? 'var(--dark-text-primary)' : 'var(--light-text-primary)' }}>${(orgMetrics.outsideCounselSpend / 1000).toFixed(0)}k</div>
+            </div>
           </div>
         </div>
       );
@@ -1115,47 +1256,66 @@
 
     const ExposureHeatmap = ({ onCellClick, isDark }) => {
       return (
-        <section className="mb-8">
-          <div className={`${isDark ? 'bg-gray-800' : 'bg-blue-50'} brutal-border rounded-2xl p-6 hard-shadow`}>
-            <h2 className="font-brutal text-2xl mb-4 thick-rule pb-4">EXPOSURE ANALYSIS</h2>
-            <div className={`${isDark ? 'bg-gray-900' : 'bg-white'} brutal-border rounded-xl overflow-hidden`}>
-              <table className="w-full">
-                <thead>
-                  <tr className={isDark ? 'bg-gray-800' : 'bg-gray-100'}>
-                    <th className="brutal-border-thin px-4 py-3 text-left font-brutal text-sm"></th>
-                    {heatmapData.cols.map((col) => (
-                      <th
-                        key={col}
-                        className="brutal-border-thin px-4 py-3 text-center font-brutal text-sm"
-                      >
-                        {col}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {heatmapData.rows.map((row) => (
-                    <tr key={row}>
-                      <td className={`brutal-border-thin px-4 py-3 font-black ${isDark ? 'text-white bg-gray-800' : 'text-black bg-gray-50'}`}>
-                        {row}
-                      </td>
-                      {heatmapData.cols.map((col) => {
-                        const key = `${row}-${col}`;
-                        const cell = heatmapData.cells[key];
-                        return (
-                          <HeatmapCell
-                            key={key}
-                            value={cell.value}
-                            risk={cell.risk}
-                            onClick={() => onCellClick(key, cell)}
-                            isDark={isDark}
-                          />
-                        );
-                      })}
+        <section className="mb-6 md:mb-8 w-full">
+          <div className={`${isDark ? 'bg-gray-800' : 'bg-blue-50'} brutal-border rounded-xl md:rounded-2xl p-4 md:p-6 hard-shadow`}>
+            <h2 className="font-brutal text-lg md:text-2xl mb-4 thick-rule pb-4">EXPOSURE ANALYSIS</h2>
+            
+            {/* Table View with Scroll Indicator */}
+            <div className={`${isDark ? 'bg-gray-900' : 'bg-white'} brutal-border rounded-xl overflow-hidden relative`}
+                 style={{ overflowX: 'auto', scrollbarGutter: 'stable' }}>
+              {/* Scroll Indicator for Mobile - Fade Effect */}
+              <div className="md:hidden absolute top-2 right-2 z-20 brutal-border-thin px-3 py-2 rounded-lg text-xs font-black shadow-lg pointer-events-none"
+                   style={isDark ? { backgroundColor: 'var(--dark-accent-yellow)', color: '#000', borderColor: 'var(--dark-border)' } : { backgroundColor: '#FEEB99', color: '#000', borderColor: '#000' }}>
+                Scroll for more →
+              </div>
+              
+              {/* Fade mask on right edge */}
+              <div className="md:hidden absolute top-0 right-0 w-16 h-full pointer-events-none z-10"
+                   style={{ 
+                     background: isDark 
+                       ? 'linear-gradient(to left, var(--dark-bg-card) 0%, transparent 100%)' 
+                       : 'linear-gradient(to left, #fff 0%, transparent 100%)'
+                   }}></div>
+              
+              <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch', scrollbarGutter: 'stable' }}>
+                <table className="w-full min-w-[600px]">
+                  <thead>
+                    <tr className={isDark ? 'bg-gray-800' : 'bg-gray-100'}>
+                      <th className="brutal-border-thin px-3 md:px-4 py-3 text-left font-brutal text-xs md:text-sm whitespace-nowrap"></th>
+                      {heatmapData.cols.map((col) => (
+                        <th
+                          key={col}
+                          className="brutal-border-thin px-3 md:px-4 py-3 text-center font-brutal text-xs md:text-sm whitespace-nowrap"
+                        >
+                          {col}
+                        </th>
+                      ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {heatmapData.rows.map((row) => (
+                      <tr key={row}>
+                        <td className={`brutal-border-thin px-3 md:px-4 py-3 font-black text-sm md:text-base whitespace-nowrap ${isDark ? 'text-white bg-gray-800' : 'text-black bg-gray-50'}`}>
+                          {row}
+                        </td>
+                        {heatmapData.cols.map((col) => {
+                          const key = `${row}-${col}`;
+                          const cell = heatmapData.cells[key];
+                          return (
+                            <HeatmapCell
+                              key={key}
+                              value={cell.value}
+                              risk={cell.risk}
+                              onClick={() => onCellClick(key, cell)}
+                              isDark={isDark}
+                            />
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </section>
@@ -1180,19 +1340,25 @@
         <>
           <div className="fixed inset-0 bg-black bg-opacity-50 z-50" onClick={handleOverlayClick} />
           <div className="fixed inset-0 flex items-center justify-center z-50 p-0 md:p-4 overflow-y-auto pointer-events-none">
-            <div className="brutal-border md:rounded-2xl p-4 md:p-8 max-w-4xl w-full h-full md:h-auto md:max-h-[90vh] hard-shadow md:my-8 transition-colors pointer-events-auto overflow-y-auto modal-container"
+            <div className="brutal-border md:rounded-2xl p-4 md:p-8 max-w-4xl w-full h-full md:h-auto md:max-h-[90vh] hard-shadow md:my-8 transition-colors pointer-events-auto overflow-y-auto modal-container relative"
                  style={isDark ? { backgroundColor: 'var(--dark-bg-card)', color: 'var(--dark-text-primary)', borderColor: 'var(--dark-border)' } : { backgroundColor: '#fff' }}
                  onClick={(e) => e.stopPropagation()}>
+              {/* Scroll Indicator for Mobile */}
+              <div className="md:hidden sticky top-4 right-4 z-20 brutal-border-thin px-3 py-2 rounded-lg text-xs font-black shadow-lg float-right"
+                   style={isDark ? { backgroundColor: 'var(--dark-accent-yellow)', color: '#000', borderColor: 'var(--dark-border)' } : { backgroundColor: '#FEEB99', color: '#000', borderColor: '#000' }}>
+                ↓ Scroll ↓
+              </div>
+              
               <div className="flex items-center justify-between mb-6 thick-rule pb-4">
                 <div>
                   <div className="text-xs font-bold mb-1" style={{ color: isDark ? 'var(--dark-text-secondary)' : '#6B7280' }}>EXPOSURE ANALYSIS</div>
-                  <h2 className="font-brutal text-3xl" style={{ color: isDark ? 'var(--dark-text-primary)' : '#000' }}>
+                  <h2 className="font-brutal text-xl md:text-3xl" style={{ color: isDark ? 'var(--dark-text-primary)' : '#000' }}>
                     {department} - {clause}
                   </h2>
                 </div>
                 <button
                   onClick={handleClose}
-                  className="brutal-border-thin p-2 rounded-lg hard-shadow-hover transition-all"
+                  className="brutal-border-thin p-3 md:p-2 rounded-lg hard-shadow-hover transition-all min-w-[44px] min-h-[44px] flex items-center justify-center"
                   style={isDark ? { backgroundColor: 'var(--dark-bg-primary)', borderColor: 'var(--dark-border)', color: 'var(--dark-text-primary)' } : { backgroundColor: '#fff', color: '#000' }}
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1313,14 +1479,14 @@
       const colorClass = progress >= 70 ? 'bg-green-200' : progress >= 40 ? 'bg-yellow-100' : 'bg-red-200';
       
       return (
-        <div className="flex items-center space-x-3">
-          <div className="flex-1 h-4 bg-gray-200 brutal-border-thin rounded-full overflow-hidden">
+        <div className="flex items-center space-x-2 md:space-x-3 min-w-[100px]">
+          <div className="flex-1 h-3 md:h-4 bg-gray-200 brutal-border-thin rounded-full overflow-hidden min-w-0">
             <div
               className={`h-full ${colorClass} transition-all`}
               style={{ width: `${progress}%` }}
             />
           </div>
-          <span className="text-sm font-black text-black whitespace-nowrap">{daysRemaining}d</span>
+          <span className="text-xs md:text-sm font-black text-black whitespace-nowrap flex-shrink-0">{daysRemaining}d</span>
         </div>
       );
     };
@@ -1380,7 +1546,9 @@
             }}
             onMouseEnter={() => setShowTooltip(true)}
             onMouseLeave={() => setShowTooltip(false)}
+            onTouchStart={() => setShowTooltip(true)}
             className={`brutal-border-thin ${isDark ? 'bg-gray-800' : 'bg-white'} p-2 rounded-lg hard-shadow-hover transition-all min-w-[44px] min-h-[44px]`}
+            title="Send contract status"
           >
             <svg className={`w-5 h-5 ${isDark ? 'text-white' : 'text-black'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 7l5 5m0 0l-5 5m5-5H6" />
@@ -1499,8 +1667,10 @@
             }}
             onMouseEnter={() => setShowTooltip(true)}
             onMouseLeave={() => setShowTooltip(false)}
+            onTouchStart={() => setShowTooltip(true)}
             className="brutal-border-thin p-2 rounded-lg hard-shadow-hover transition-all min-w-[44px] min-h-[44px]"
             style={isDark ? { backgroundColor: 'var(--dark-bg-primary)', borderColor: 'var(--dark-border)', color: 'var(--dark-text-primary)' } : { backgroundColor: '#fff', color: '#000' }}
+            title="Edit contract"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -1740,109 +1910,168 @@
 
       return (
         <>
-          <section>
-            <div className="brutal-border rounded-xl md:rounded-2xl overflow-hidden hard-shadow transition-colors"
+          <section className="w-full">
+            <div className="brutal-border rounded-xl md:rounded-2xl overflow-hidden hard-shadow transition-colors w-full"
                  style={isDark ? { backgroundColor: 'var(--dark-bg-card)', borderColor: 'var(--dark-border)' } : { backgroundColor: '#fff' }}>
               <div className="brutal-border-b-4 px-4 md:px-6 py-3 md:py-4"
                    style={isDark ? { backgroundColor: 'var(--dark-accent-yellow)', borderColor: 'var(--dark-border)' } : { backgroundColor: '#FEEB99' }}>
                 <h2 className="font-brutal text-lg md:text-2xl" style={isDark ? { color: '#000' } : {}}>CONTRACT QUEUE</h2>
               </div>
-              <div className="overflow-x-auto -mx-2 md:mx-0">
-                <table className="w-full min-w-[700px] md:min-w-[800px]">
-                <thead style={isDark ? { backgroundColor: 'var(--dark-bg-card)' } : { backgroundColor: '#F3F4F6' }}>
-                  <tr>
-                    <th className="brutal-border-thin px-2 md:px-4 py-2 md:py-4 text-left font-brutal text-xs" style={{ color: isDark ? 'var(--dark-text-primary)' : '#000' }}>NAME</th>
-                    <th className="brutal-border-thin px-2 md:px-4 py-2 md:py-4 text-left font-brutal text-xs" style={{ color: isDark ? 'var(--dark-text-primary)' : '#000' }}>STATUS</th>
-                    <th className="brutal-border-thin px-2 md:px-4 py-2 md:py-4 text-left font-brutal text-xs" style={{ color: isDark ? 'var(--dark-text-primary)' : '#000' }}>SLA</th>
-                    <th className="brutal-border-thin px-2 md:px-4 py-2 md:py-4 text-left font-brutal text-xs" style={{ color: isDark ? 'var(--dark-text-primary)' : '#000' }}>VALUE</th>
-                    <th className="brutal-border-thin px-2 md:px-4 py-2 md:py-4 text-left font-brutal text-xs" style={{ color: isDark ? 'var(--dark-text-primary)' : '#000' }}>RISK</th>
-                    <th className="brutal-border-thin px-2 md:px-4 py-2 md:py-4 text-left font-brutal text-xs" style={{ color: isDark ? 'var(--dark-text-primary)' : '#000' }}>ACTIONS</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {contracts.map((contract) => (
-                    <tr
-                      key={contract.id}
-                      onClick={() => onRowClick(contract)}
-                      className="brutal-border-thin cursor-pointer transition-colors"
-                      style={isDark ? { 
-                        borderColor: 'var(--dark-border)',
-                        ':hover': { backgroundColor: 'var(--dark-bg-card)' }
-                      } : { ':hover': { backgroundColor: '#EFF6FF' } }}
-                      onMouseEnter={(e) => {
-                        if (isDark) {
-                          e.currentTarget.style.backgroundColor = 'var(--dark-bg-card)';
-                        } else {
-                          e.currentTarget.style.backgroundColor = '#EFF6FF';
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = '';
-                      }}
-                    >
-                      <td className="px-2 md:px-4 py-3 md:py-4 brutal-border-thin" style={{ color: isDark ? 'var(--dark-text-primary)' : '#000', borderColor: isDark ? 'var(--dark-border)' : '#000' }}>
-                        <div className="font-black text-sm md:text-base">{contract.name}</div>
-                        <div className="text-xs font-bold" style={{ color: isDark ? 'var(--dark-text-secondary)' : '#6B7280' }}>{contract.id}</div>
-                      </td>
-                      <td className="px-2 md:px-4 py-3 md:py-4 brutal-border-thin">
-                        <StatusPill status={contract.status} />
-                      </td>
-                      <td className="px-2 md:px-4 py-3 md:py-4 brutal-border-thin">
-                        <ProgressBar progress={contract.slaProgress} daysRemaining={contract.slaDaysRemaining} />
-                      </td>
-                      <td className="px-2 md:px-4 py-3 md:py-4 brutal-border-thin" style={{ color: isDark ? 'var(--dark-text-primary)' : '#000', borderColor: isDark ? 'var(--dark-border)' : '#000' }}>
-                        <div className="font-black text-sm md:text-base">
-                          {contract.value > 0 ? `$${(contract.value / 1000).toFixed(0)}k` : 'N/A'}
-                        </div>
-                        <div className="text-xs font-bold" style={{ color: isDark ? 'var(--dark-text-secondary)' : '#6B7280' }}>{contract.valueLabel}</div>
-                      </td>
-                      <td className="px-2 md:px-4 py-3 md:py-4 brutal-border-thin" style={{ borderColor: isDark ? 'var(--dark-border)' : '#000' }} onClick={(e) => handleRiskClick(e, contract)}>
-                        <RiskCircle score={contract.riskScore} onClick={(e) => handleRiskClick(e, contract)} isDark={isDark} />
-                      </td>
-                      <td className="px-2 md:px-4 py-3 md:py-4 brutal-border-thin" style={{ borderColor: isDark ? 'var(--dark-border)' : '#000' }}>
-                        <div className="flex items-center space-x-1 md:space-x-2">
-                          <div className="relative">
-                            <button 
-                              className="brutal-border-thin p-2 rounded-lg hard-shadow-hover transition-all min-w-[44px] min-h-[44px]"
-                              style={isDark ? { backgroundColor: 'var(--dark-bg-primary)', borderColor: 'var(--dark-border)', color: 'var(--dark-text-primary)' } : { backgroundColor: '#fff', color: '#000' }}
-                              onMouseEnter={() => showTooltip(`deal-${contract.id}`)}
-                              onMouseLeave={() => hideTooltip(`deal-${contract.id}`)}
-                              onClick={(e) => handleDealMemo(e, contract)}
-                            >
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                              </svg>
-                            </button>
-                            {tooltips[`deal-${contract.id}`] && (
-                              <div className="tooltip tooltip-visible">Generate deal memo</div>
-                            )}
-                          </div>
-                          <SendDropdown contract={contract} isDark={isDark} />
-                          <div className="relative">
-                            <button 
-                              className="brutal-border-thin p-2 rounded-lg hard-shadow-hover transition-all min-w-[44px] min-h-[44px]"
-                              style={isDark ? { backgroundColor: 'var(--dark-bg-primary)', borderColor: 'var(--dark-border)', color: 'var(--dark-text-primary)' } : { backgroundColor: '#fff', color: '#000' }}
-                              onMouseEnter={() => showTooltip(`view-${contract.id}`)}
-                              onMouseLeave={() => hideTooltip(`view-${contract.id}`)}
-                              onClick={(e) => handleViewClick(e, contract)}
-                            >
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                              </svg>
-                            </button>
-                            {tooltips[`view-${contract.id}`] && (
-                              <div className="tooltip tooltip-visible">View contract details</div>
-                            )}
-                          </div>
-                          <EditDropdown contract={contract} isDark={isDark} />
-                        </div>
-                      </td>
+              
+              {/* Table View with Scroll Indicator */}
+              <div className="relative">
+                {/* Scroll Indicator for Mobile */}
+                <div className="md:hidden absolute top-2 right-2 z-20 brutal-border-thin px-3 py-2 rounded-lg text-xs font-black shadow-lg pointer-events-none"
+                     style={isDark ? { backgroundColor: 'var(--dark-accent-yellow)', color: '#000', borderColor: 'var(--dark-border)' } : { backgroundColor: '#FEEB99', color: '#000', borderColor: '#000' }}>
+                  Scroll for more →
+                </div>
+                
+                {/* Fade mask on right edge */}
+                <div className="md:hidden absolute top-0 right-0 w-16 h-full pointer-events-none z-10"
+                     style={{ 
+                       background: isDark 
+                         ? 'linear-gradient(to left, var(--dark-bg-card) 0%, transparent 100%)' 
+                         : 'linear-gradient(to left, #fff 0%, transparent 100%)'
+                     }}></div>
+                
+                <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch', scrollbarGutter: 'stable' }}>
+                  <table className="w-full min-w-[700px] md:min-w-[800px]"
+                         style={{ tableLayout: 'auto' }}>
+                  <thead style={isDark ? { backgroundColor: 'var(--dark-bg-card)' } : { backgroundColor: '#F3F4F6' }}>
+                    <tr>
+                      <th className="brutal-border-thin px-3 md:px-4 py-3 md:py-4 text-left font-brutal text-xs whitespace-nowrap" style={{ color: isDark ? 'var(--dark-text-primary)' : '#000' }}>NAME</th>
+                      <th className="brutal-border-thin px-3 md:px-4 py-3 md:py-4 text-left font-brutal text-xs whitespace-nowrap" style={{ color: isDark ? 'var(--dark-text-primary)' : '#000' }}>STATUS</th>
+                      <th className="brutal-border-thin px-3 md:px-4 py-3 md:py-4 text-left font-brutal text-xs whitespace-nowrap" 
+                          style={{ 
+                            color: isDark ? 'var(--dark-text-primary)' : '#000',
+                            minWidth: '80px',
+                            whiteSpace: 'nowrap'
+                          }}>SLA</th>
+                      <th className="brutal-border-thin px-3 md:px-4 py-3 md:py-4 text-left font-brutal text-xs whitespace-nowrap" style={{ color: isDark ? 'var(--dark-text-primary)' : '#000' }}>VALUE</th>
+                      <th className="brutal-border-thin px-3 md:px-4 py-3 md:py-4 text-left font-brutal text-xs whitespace-nowrap" style={{ color: isDark ? 'var(--dark-text-primary)' : '#000' }}>RISK</th>
+                      <th className="brutal-border-thin px-3 md:px-4 py-3 md:py-4 text-left font-brutal text-xs whitespace-nowrap" style={{ color: isDark ? 'var(--dark-text-primary)' : '#000' }}>ACTIONS</th>
                     </tr>
-                  ))}
-                </tbody>
-                </table>
+                  </thead>
+                  <tbody>
+                    {contracts.map((contract) => (
+                      <tr
+                        key={contract.id}
+                        onClick={() => onRowClick(contract)}
+                        className="brutal-border-thin cursor-pointer transition-colors"
+                        style={isDark ? { 
+                          borderColor: 'var(--dark-border)',
+                          ':hover': { backgroundColor: 'var(--dark-bg-card)' }
+                        } : { ':hover': { backgroundColor: '#EFF6FF' } }}
+                        onMouseEnter={(e) => {
+                          if (isDark) {
+                            e.currentTarget.style.backgroundColor = 'var(--dark-bg-card)';
+                          } else {
+                            e.currentTarget.style.backgroundColor = '#EFF6FF';
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = '';
+                        }}
+                      >
+                        <td className="px-3 md:px-4 py-3 md:py-4 brutal-border-thin whitespace-nowrap" style={{ color: isDark ? 'var(--dark-text-primary)' : '#000', borderColor: isDark ? 'var(--dark-border)' : '#000' }}>
+                          <div className="font-black text-sm md:text-base">{contract.name}</div>
+                          <div className="text-xs font-bold" style={{ color: isDark ? 'var(--dark-text-secondary)' : '#6B7280' }}>{contract.id}</div>
+                        </td>
+                        <td className="px-3 md:px-4 py-3 md:py-4 brutal-border-thin whitespace-nowrap">
+                          <StatusPill status={contract.status} />
+                        </td>
+                        <td className="px-3 md:px-4 py-3 md:py-4 brutal-border-thin whitespace-nowrap" 
+                            style={{ minWidth: '80px', whiteSpace: 'nowrap' }}>
+                          <ProgressBar progress={contract.slaProgress} daysRemaining={contract.slaDaysRemaining} />
+                        </td>
+                        <td className="px-3 md:px-4 py-3 md:py-4 brutal-border-thin whitespace-nowrap" style={{ color: isDark ? 'var(--dark-text-primary)' : '#000', borderColor: isDark ? 'var(--dark-border)' : '#000' }}>
+                          <div className="font-black text-sm md:text-base">
+                            {contract.value > 0 ? `$${(contract.value / 1000).toFixed(0)}k` : 'N/A'}
+                          </div>
+                          <div className="text-xs font-bold" style={{ color: isDark ? 'var(--dark-text-secondary)' : '#6B7280' }}>{contract.valueLabel}</div>
+                        </td>
+                        <td className="px-3 md:px-4 py-3 md:py-4 brutal-border-thin whitespace-nowrap" style={{ borderColor: isDark ? 'var(--dark-border)' : '#000' }} onClick={(e) => handleRiskClick(e, contract)}>
+                          <RiskCircle score={contract.riskScore} onClick={(e) => handleRiskClick(e, contract)} isDark={isDark} />
+                        </td>
+                        <td className="px-3 md:px-4 py-3 md:py-4 brutal-border-thin whitespace-nowrap" style={{ borderColor: isDark ? 'var(--dark-border)' : '#000' }}>
+                          {/* Desktop: Icons */}
+                          <div className="hidden md:flex items-center space-x-2">
+                            <div className="relative">
+                              <button 
+                                className="brutal-border-thin p-2 rounded-lg hard-shadow-hover transition-all min-w-[44px] min-h-[44px]"
+                                style={isDark ? { backgroundColor: 'var(--dark-bg-primary)', borderColor: 'var(--dark-border)', color: 'var(--dark-text-primary)' } : { backgroundColor: '#fff', color: '#000' }}
+                                onMouseEnter={() => showTooltip(`deal-${contract.id}`)}
+                                onMouseLeave={() => hideTooltip(`deal-${contract.id}`)}
+                                onClick={(e) => handleDealMemo(e, contract)}
+                                title="Generate deal memo"
+                              >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                              </button>
+                              {tooltips[`deal-${contract.id}`] && (
+                                <div className="tooltip tooltip-visible">Generate deal memo</div>
+                              )}
+                            </div>
+                            <SendDropdown contract={contract} isDark={isDark} />
+                            <div className="relative">
+                              <button 
+                                className="brutal-border-thin p-2 rounded-lg hard-shadow-hover transition-all min-w-[44px] min-h-[44px]"
+                                style={isDark ? { backgroundColor: 'var(--dark-bg-primary)', borderColor: 'var(--dark-border)', color: 'var(--dark-text-primary)' } : { backgroundColor: '#fff', color: '#000' }}
+                                onMouseEnter={() => showTooltip(`view-${contract.id}`)}
+                                onMouseLeave={() => hideTooltip(`view-${contract.id}`)}
+                                onClick={(e) => handleViewClick(e, contract)}
+                                title="View contract details"
+                              >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                              </button>
+                              {tooltips[`view-${contract.id}`] && (
+                                <div className="tooltip tooltip-visible">View contract details</div>
+                              )}
+                            </div>
+                            <EditDropdown contract={contract} isDark={isDark} />
+                          </div>
+                          
+                          {/* Mobile: Icons with labels */}
+                          <div className="md:hidden flex flex-col items-center gap-1">
+                            <div className="flex items-center gap-1">
+                              <button 
+                                className="brutal-border-thin p-2 rounded-lg hard-shadow-hover transition-all min-w-[44px] min-h-[44px]"
+                                style={isDark ? { backgroundColor: 'var(--dark-bg-primary)', borderColor: 'var(--dark-border)', color: 'var(--dark-text-primary)' } : { backgroundColor: '#fff', color: '#000' }}
+                                onClick={(e) => handleDealMemo(e, contract)}
+                                title="Generate deal memo"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                              </button>
+                              <SendDropdown contract={contract} isDark={isDark} />
+                              <button 
+                                className="brutal-border-thin p-2 rounded-lg hard-shadow-hover transition-all min-w-[44px] min-h-[44px]"
+                                style={isDark ? { backgroundColor: 'var(--dark-bg-primary)', borderColor: 'var(--dark-border)', color: 'var(--dark-text-primary)' } : { backgroundColor: '#fff', color: '#000' }}
+                                onClick={(e) => handleViewClick(e, contract)}
+                                title="View contract details"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                              </button>
+                              <EditDropdown contract={contract} isDark={isDark} />
+                            </div>
+                            <div className="text-[8px] font-bold" style={{ color: isDark ? 'var(--dark-text-secondary)' : '#6B7280' }}>ACTIONS</div>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  </table>
+                </div>
               </div>
+
             </div>
           </section>
           <RiskDetailModal
@@ -2055,9 +2284,18 @@
             className="fixed inset-0 bg-black bg-opacity-50 z-40"
             onClick={handleOverlayClick}
           />
-          <div className="fixed right-0 top-0 h-full w-full md:w-1/2 lg:w-1/3 brutal-border-l-4 z-40 overflow-y-auto hard-shadow transition-colors"
-               style={isDark ? { backgroundColor: 'var(--dark-bg-card)', borderColor: 'var(--dark-border)' } : { backgroundColor: '#fff' }}
+          <div className="fixed right-0 top-0 h-full w-full md:w-1/2 lg:w-1/3 brutal-border-l-4 z-40 overflow-y-auto hard-shadow transition-colors relative"
+               style={{ 
+                 backgroundColor: isDark ? 'var(--dark-bg-card)' : '#fff',
+                 borderColor: isDark ? 'var(--dark-border)' : '#000',
+                 scrollbarGutter: 'stable'
+               }}
                onClick={(e) => e.stopPropagation()}>
+            {/* Scroll Indicator for Mobile */}
+            <div className="md:hidden sticky top-4 right-4 z-20 brutal-border-thin px-3 py-2 rounded-lg text-xs font-black shadow-lg float-right pointer-events-none"
+                 style={isDark ? { backgroundColor: 'var(--dark-accent-yellow)', color: '#000', borderColor: 'var(--dark-border)' } : { backgroundColor: '#FEEB99', color: '#000', borderColor: '#000' }}>
+              ↓ Scroll ↓
+            </div>
             <div className="p-4 md:p-6 space-y-6 md:space-y-8">
             <div className="sticky top-0 brutal-border-b-4 px-4 md:px-6 py-3 md:py-4 flex items-center justify-between"
                  style={isDark ? { backgroundColor: 'var(--dark-accent-yellow)', borderColor: 'var(--dark-border)' } : { backgroundColor: '#FEEB99' }}>
@@ -2288,7 +2526,14 @@
 
       return (
         <div className="min-h-screen transition-colors"
-             style={isDark ? { backgroundColor: 'var(--dark-bg-primary)', color: 'var(--dark-text-primary)' } : { backgroundColor: 'var(--light-bg-primary)', color: 'var(--light-text-primary)' }}>
+             style={{ 
+               backgroundColor: isDark ? 'var(--dark-bg-primary)' : 'var(--light-bg-primary)',
+               color: isDark ? 'var(--dark-text-primary)' : 'var(--light-text-primary)',
+               maxHeight: isDrawerOpen ? '100vh' : 'none',
+               overflow: isDrawerOpen ? 'hidden' : 'visible',
+               width: '100vw',
+               margin: 0
+             }}>
           <TopNav 
             isDark={isDark} 
             onToggleDark={handleToggleDark}
@@ -2296,24 +2541,29 @@
             onSearchChange={setSearchQuery}
             onExport={handleExport}
           />
-          <div className="mt-8 md:mt-12 px-3 md:px-6 py-4 md:py-8">
-            <div className="max-w-7xl mx-auto">
+          <div className="mt-8 md:mt-12 px-3 md:px-6 py-4 md:py-8" style={{ width: '100%', maxWidth: '100vw' }}>
+            <div className="max-w-7xl mx-auto w-full">
               <h1 className="font-brutal text-2xl md:text-5xl mb-4 md:mb-8 thick-rule pb-3 md:pb-4"
                   style={{ color: isDark ? 'var(--dark-text-primary)' : 'var(--light-text-primary)' }}>
                 CONTRACT DASHBOARD
               </h1>
+              
+              {/* Org Health Metrics at the top */}
+              <OrgMetrics isDark={isDark} />
+              
               <PriorityActionPanel 
                 contracts={contracts} 
                 onContractClick={handleRowClick}
                 isDark={isDark}
               />
               <KPIGrid isDark={isDark} />
+              
+              {/* Main Content Grid */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 mb-6 md:mb-8">
-                <div className="lg:col-span-2">
-                  <OrgMetrics isDark={isDark} />
+                <div className="lg:col-span-2 order-1">
                   <ExposureHeatmap onCellClick={handleExposureCellClick} isDark={isDark} />
                 </div>
-                <div className="lg:col-span-1">
+                <div className="lg:col-span-1 order-2">
                   <ActivityFeed activities={recentActivity} isDark={isDark} />
                 </div>
               </div>
